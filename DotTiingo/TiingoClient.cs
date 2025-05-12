@@ -10,9 +10,11 @@ namespace DotTiingo;
 public class TiingoClient
 {
     public ITiingoRestApi Rest { get; }
+    public ITiingoWebSocketApi WebSocket { get; }
 
     public TiingoClient(HttpClient httpClient, string token)
     {
         Rest = new RestApi(httpClient, token);
+        WebSocket = new WebsocketApi();
     }
 }

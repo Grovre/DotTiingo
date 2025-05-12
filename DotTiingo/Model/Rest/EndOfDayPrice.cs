@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DotTiingo.Model;
+namespace DotTiingo.Model.Rest;
 
 public record EndOfDayPrice(
     DateTime Date,

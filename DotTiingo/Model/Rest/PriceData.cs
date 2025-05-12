@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DotTiingo.Model;
+namespace DotTiingo.Model.Rest;
 
 public record PriceData(
     float Open,

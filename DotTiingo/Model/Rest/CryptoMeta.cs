@@ -4,12 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DotTiingo.Model;
+namespace DotTiingo.Model.Rest;
 
-public record EndOfDayMeta(
+public record CryptoMeta(
     string Ticker,
+    string BaseCurrency,
+    string QuoteCurrency,
     string Name,
-    string ExchangeCode,
-    string Description,
-    DateTime StartDate,
-    DateTime EndDate);
+    string? Description);

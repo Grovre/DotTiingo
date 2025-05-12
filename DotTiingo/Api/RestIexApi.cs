@@ -1,4 +1,4 @@
-﻿using DotTiingo.Model;
+﻿using DotTiingo.Model.Rest;
 using System;
 using System.Collections.Generic;
 using System.Dynamic;

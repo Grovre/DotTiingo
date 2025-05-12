@@ -1,4 +1,4 @@
-namespace DotTiingo.Model;
+namespace DotTiingo.Model.Rest;
 
 public record CryptoPrice(
     string Ticker,

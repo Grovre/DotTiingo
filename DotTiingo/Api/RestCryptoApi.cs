@@ -1,5 +1,4 @@
-﻿using DotTiingo.Model;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
@@ -7,6 +6,7 @@ using System.Net.Http.Json;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using DotTiingo.Model.Rest;
 
 namespace DotTiingo.Api;
 
