@@ -1,5 +1,5 @@
 ﻿using DotTiingo;
-using DotTiingo.Model;
+using DotTiingo.Model.Rest;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
