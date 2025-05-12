@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DotTiingo.Api;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +9,7 @@ namespace DotTiingo;
 
 public class TiingoClient
 {
-    public RestApi Rest { get; }
+    public ITiingoRestApi Rest { get; }
 
     public TiingoClient(HttpClient httpClient, string token)
     {

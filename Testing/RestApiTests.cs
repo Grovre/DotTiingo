@@ -25,7 +25,7 @@ public class RestApiTests
     [Test]
     public async Task EndOfDayPrices()
     {
-        var prices = await _client.Rest.GetEndOfDayPrices("AAPL", new(DateTime.UtcNow - TimeSpan.FromDays(90), DateTime.UtcNow), "daily", "volume");
+        var prices = await _client.Rest.EndOfDay.GetEndOfDayPrices("AAPL", new(DateTime.UtcNow - TimeSpan.FromDays(90), DateTime.UtcNow), "daily", "volume");
         Assert.That(prices, Is.Not.Null);
         Assert.That(prices, Has.Length.Positive);
         Assert.That(prices, Is.EquivalentTo(prices.OrderBy(x => x.Volume)));
@@ -34,7 +34,7 @@ public class RestApiTests
     [Test]
     public async Task EndOfDayMeta()
     {
-        var meta = await _client.Rest.GetEndOfDayMeta("AAPL");
+        var meta = await _client.Rest.EndOfDay.GetEndOfDayMeta("AAPL");
         Assert.That(meta, Is.Not.Null);
         Assert.That(meta.Ticker, Is.EqualTo("AAPL"));
         Assert.That(meta.Name, Is.EqualTo("Apple Inc"));
@@ -44,7 +44,7 @@ public class RestApiTests
     [Test]
     public async Task News()
     {
-        var news = await _client.Rest.GetNews(["AAPL", "NVDA", "INTC"], null, new(DateTime.UtcNow - TimeSpan.FromDays(90), DateTime.UtcNow), 1, null, "publishedDate");
+        var news = await _client.Rest.News.GetNews(["AAPL", "NVDA", "INTC"], null, new(DateTime.UtcNow - TimeSpan.FromDays(90), DateTime.UtcNow), 1, null, "publishedDate");
         Assert.That(news, Is.Not.Null);
         Assert.That(news, Has.Length.Positive);
         Assert.That(news, Is.EquivalentTo(news.OrderBy(x => x.PublishedDate)));
@@ -53,7 +53,7 @@ public class RestApiTests
     [Test]
     public async Task CryptoPrices()
     {
-        var prices = await _client.Rest.GetCryptoPrices(["btcusd"], null, new(DateTime.UtcNow - TimeSpan.FromDays(90), DateTime.UtcNow), null);
+        var prices = await _client.Rest.Crypto.GetCryptoPrices(["btcusd"], null, new(DateTime.UtcNow - TimeSpan.FromDays(90), DateTime.UtcNow), null);
         Assert.That(prices, Is.Not.Null);
         Assert.That(prices, Has.Length.Positive);
     }
@@ -61,7 +61,7 @@ public class RestApiTests
     [Test]
     public async Task CryptoMeta()
     {
-        var meta = await _client.Rest.GetCryptoMeta(["btcusd"]);
+        var meta = await _client.Rest.Crypto.GetCryptoMeta(["btcusd"]);
         Assert.That(meta, Is.Not.Null);
         Assert.That(meta, Has.Length.Positive);
     }
@@ -69,7 +69,7 @@ public class RestApiTests
     [Test]
     public async Task IexCurrentTopOfBookAndLastPrice()
     {
-        var prices = await _client.Rest.GetIexCurrentTopOfBookAndLastPrice(["AAPL"]);
+        var prices = await _client.Rest.Iex.GetIexCurrentTopOfBookAndLastPrice(["AAPL"]);
         Assert.That(prices, Is.Not.Null);
         Assert.That(prices, Has.Length.Positive);
     }
@@ -78,7 +78,7 @@ public class RestApiTests
     public async Task IexHistoricalPrices()
     {
         var interval = new DateTimeInterval(DateTime.UtcNow - TimeSpan.FromDays(90), DateTime.UtcNow);
-        var prices = await _client.Rest.GetIexHistoricalPrices("AAPL", interval, null, null, null);
+        var prices = await _client.Rest.Iex.GetIexHistoricalPrices("AAPL", interval, null, null, null);
         Assert.That(prices, Is.Not.Null);
         Assert.That(prices, Has.Length.Positive);
     }
