@@ -13,7 +13,8 @@ internal class ResponseFactory
 {
     public AbstractResponse CreateResponseFromJson(string json)
     {
-        var jsonElement = JsonDocument.Parse(json).RootElement;
+        using var document = JsonDocument.Parse(json);
+        var jsonElement = document.RootElement;
         var responseMsgType = jsonElement.GetProperty("messageType").GetString()[0];
         AbstractResponse response;
         IResponseData data;
