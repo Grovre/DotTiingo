@@ -9,4 +9,5 @@ namespace DotTiingo.Api;
 internal static class TiingoApiHelper
 {
     public const string RestBaseUrl = "https://api.tiingo.com";
+    public const string WebSocketBaseUrl = "wss://api.tiingo.com";
 }
