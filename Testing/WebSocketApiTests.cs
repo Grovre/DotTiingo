@@ -25,7 +25,7 @@ public class WebSocketApiTests
     [Test]
     public async Task Crypto()
     {
-        using var conn = await _client.WebSocket.Crypto.Connect(2, CancellationToken.None);
+        var conn = await _client.WebSocket.Crypto.Connect(2, CancellationToken.None);
 
         var datum = 0;
         var utilities = 0;
@@ -38,7 +38,10 @@ public class WebSocketApiTests
             else if (response is DataResponse data)
                 datum++;
             else
+            {
+                conn.Dispose();
                 Assert.Fail($"Unknown response type: {response.GetType()}. Message type: {response.MessageType}");
+            }
         };
 
         var timedOut = !SpinWait.SpinUntil(
@@ -68,7 +71,10 @@ public class WebSocketApiTests
             else if (response is DataResponse data)
                 datum++;
             else
+            {
+                conn.Dispose();
                 Assert.Fail($"Unknown response type: {response.GetType()}. Message type: {response.MessageType}");
+            }
         };
 
         var timedOut = !SpinWait.SpinUntil(
