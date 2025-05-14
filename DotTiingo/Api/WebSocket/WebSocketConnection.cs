@@ -46,16 +46,27 @@ internal sealed class WebSocketConnection : ITiingoWebSocketConnection
     private async Task<AbstractResponse> ReceiveAsync(CancellationToken cancellationToken)
     {
         _appendBuffer.Clear();
+        Span<byte> bytes;
         WebSocketReceiveResult receiveResult;
+        var firstReceive = true;
         do
         {
             receiveResult = await _clientWebSocket.ReceiveAsync(_buffer, cancellationToken);
+
+            if (firstReceive && receiveResult.EndOfMessage)
+            {
+                bytes = _buffer.AsSpan(0, receiveResult.Count);
+                break;
+            }
+
+            firstReceive = false;
             _appendBuffer.AddRange(_buffer.AsSpan(0, receiveResult.Count));
-        } while (!receiveResult.EndOfMessage);
+        } while (true);
 
-        var bytes = CollectionsMarshal.AsSpan(_appendBuffer);
+        if (!firstReceive)
+            bytes = CollectionsMarshal.AsSpan(_appendBuffer);
+
         var json = Encoding.UTF8.GetString(bytes);
-
         var response = _responseFactory.CreateResponseFromJson(json)
             ?? throw new NullReferenceException(
                 "WebSocket response was deserialized as null");
