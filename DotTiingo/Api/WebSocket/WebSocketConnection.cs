@@ -23,41 +23,40 @@ internal sealed class WebSocketConnection : ITiingoWebSocketConnection
     private readonly CancellationTokenSource _cancelTokenSource;
     public Task ReceiveTask { get; private set; }
     public event EventHandler<AbstractResponse>? OnResponseReceived;
-    private bool _readingSocket = false;
 
     public WebSocketConnection(ClientWebSocket clientWebSocket, CancellationToken cancellationToken)
     {
         _clientWebSocket = clientWebSocket;
         _cancelTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        cancellationToken = _cancelTokenSource.Token;
-        ReceiveTask = new TaskFactory().StartNew(() =>
-        {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                var response = ReceiveAsync(cancellationToken).GetAwaiter().GetResult();
-                OnResponseReceived?.Invoke(this, response);
-            }
-        }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+        ReceiveTask = ReceiveLoopAsync(_cancelTokenSource.Token);
     }
 
+    private async Task ReceiveLoopAsync(CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            var response = await ReceiveAsync(cancellationToken);
+            OnResponseReceived?.Invoke(this, response);
+        }
+    }
+
+    private readonly byte[] _buffer = new byte[1024];
+    private readonly List<byte> _appendBuffer = [];
+    private readonly ResponseFactory _responseFactory = new();
     private async Task<AbstractResponse> ReceiveAsync(CancellationToken cancellationToken)
     {
-        _readingSocket = true;
-        var buffer = new byte[1024];
-        var appendBuffer = new List<byte>();
+        _appendBuffer.Clear();
         WebSocketReceiveResult receiveResult;
         do
         {
-            receiveResult = await _clientWebSocket.ReceiveAsync(buffer, cancellationToken);
-            appendBuffer.AddRange(buffer.AsSpan(0, receiveResult.Count));
+            receiveResult = await _clientWebSocket.ReceiveAsync(_buffer, cancellationToken);
+            _appendBuffer.AddRange(_buffer.AsSpan(0, receiveResult.Count));
         } while (!receiveResult.EndOfMessage);
-        _readingSocket = false;
 
-        var bytes = CollectionsMarshal.AsSpan(appendBuffer);
+        var bytes = CollectionsMarshal.AsSpan(_appendBuffer);
         var json = Encoding.UTF8.GetString(bytes);
 
-        var responseFactory = new ResponseFactory();
-        var response = responseFactory.CreateResponseFromJson(json)
+        var response = _responseFactory.CreateResponseFromJson(json)
             ?? throw new NullReferenceException(
                 "WebSocket response was deserialized as null");
         if (response.MessageType == 'E')
