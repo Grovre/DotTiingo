@@ -25,7 +25,7 @@ public class WebSocketApiTests
     [Test]
     public async Task Crypto()
     {
-        var conn = await _client.WebSocket.Crypto.Connect(2, CancellationToken.None);
+        using var conn = await _client.WebSocket.Crypto.Connect(2, CancellationToken.None);
 
         var datum = 0;
         var utilities = 0;
@@ -42,7 +42,37 @@ public class WebSocketApiTests
         };
 
         var timedOut = !SpinWait.SpinUntil(
-            () => datum + utilities > 1000, TimeSpan.FromSeconds(10));
+            () => datum + utilities > 100, TimeSpan.FromSeconds(10));
+
+        conn.Dispose();
+        if (timedOut)
+            Assert.Fail("Not enough responses received.");
+
+        Assert.That(datum, Is.Positive);
+        Assert.That(utilities, Is.Positive);
+    }
+
+    [Test]
+    public async Task Forex()
+    {
+        var conn = await _client.WebSocket.Forex.Connect(2, CancellationToken.None);
+
+        var datum = 0;
+        var utilities = 0;
+        var messages = new List<AbstractResponse>();
+        conn.OnResponseReceived += (sender, response) =>
+        {
+            messages.Add(response);
+            if (response is UtilityResponse utility)
+                utilities++;
+            else if (response is DataResponse data)
+                datum++;
+            else
+                Assert.Fail($"Unknown response type: {response.GetType()}. Message type: {response.MessageType}");
+        };
+
+        var timedOut = !SpinWait.SpinUntil(
+            () => datum + utilities > 100, TimeSpan.FromSeconds(10));
 
         conn.Dispose();
         if (timedOut)

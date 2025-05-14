@@ -10,14 +10,17 @@ namespace DotTiingo.Api.WebSocket;
 public interface ITiingoWebSocketApi
 {
     public ITiingoWebSocketCryptoApi Crypto { get; }
+    public ITiingoWebSocketForexApi Forex { get; }
 }
 
 internal class WebSocketApi : ITiingoWebSocketApi
 {
     public ITiingoWebSocketCryptoApi Crypto { get; }
+    public ITiingoWebSocketForexApi Forex { get; }
 
     public WebSocketApi(string token)
     {
         Crypto = new WebSocketCryptoApi(token);
+        Forex = new WebSocketForexApi(token);
     }
 }

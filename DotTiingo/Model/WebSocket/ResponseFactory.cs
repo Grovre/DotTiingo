@@ -15,36 +15,47 @@ internal class ResponseFactory
     {
         using var document = JsonDocument.Parse(json);
         var jsonElement = document.RootElement;
-        var responseMsgType = jsonElement.GetProperty("messageType").GetString()[0];
+        var messageType = jsonElement.GetProperty("messageType").GetString()[0];
         AbstractResponse response;
         IResponseData data;
 
-        switch (responseMsgType)
+        switch (messageType)
         {
             case 'A': // New data
                 var service = jsonElement.GetProperty("service").GetString();
+                string ticker;
+                DateTime dttm;
+                string exchange;
+                char updateMessageType;
+                float bidSize;
+                float bidPrice;
+                float midPrice;
+                float askSize;
+                float askPrice;
+                float lastSize;
+                float lastPrice;
                 switch (service)
                 {
                     case "crypto_data":
                         jsonElement = jsonElement.GetProperty("data");
-                        var dataMsgType = jsonElement[0].GetString()[0];
-                        switch (dataMsgType)
+                        updateMessageType = jsonElement[0].GetString()[0];
+                        switch (updateMessageType)
                         {
                             case 'T':
-                                var ticker = jsonElement[1].GetString();
-                                var dttm = jsonElement[2].GetDateTime();
-                                var exchange = jsonElement[3].GetString();
-                                var lastSize = jsonElement[4].GetDouble();
-                                var lastPrice = jsonElement[5].GetDouble();
+                                ticker = jsonElement[1].GetString();
+                                dttm = jsonElement[2].GetDateTime();
+                                exchange = jsonElement[3].GetString();
+                                lastSize = (float)jsonElement[4].GetDouble();
+                                lastPrice = (float)jsonElement[5].GetDouble();
                                 data = new CryptoTradeUpdate(
-                                    dataMsgType,
+                                    updateMessageType,
                                     ticker,
                                     dttm,
                                     exchange,
-                                    (float)lastSize,
-                                    (float)lastPrice);
+                                    lastSize,
+                                    lastPrice);
                                 response = new DataResponse(
-                                    responseMsgType,
+                                    messageType,
                                     service,
                                     data);
                                 break;
@@ -52,35 +63,57 @@ internal class ResponseFactory
                                 ticker = jsonElement[1].GetString();
                                 dttm = jsonElement[2].GetDateTime();
                                 exchange = jsonElement[3].GetString();
-                                var bidSize = jsonElement[4].GetDouble();
-                                var bidPrice = jsonElement[5].GetDouble();
-                                var midPrice = jsonElement[6].GetDouble();
-                                var askSize = jsonElement[7].GetDouble();
-                                var askPrice = jsonElement[8].GetDouble();
+                                bidSize = (float)jsonElement[4].GetDouble();
+                                bidPrice = (float)jsonElement[5].GetDouble();
+                                midPrice = (float)jsonElement[6].GetDouble();
+                                askSize = (float)jsonElement[7].GetDouble();
+                                askPrice = (float)jsonElement[8].GetDouble();
                                 data = new CryptoQuoteUpdate(
-                                    dataMsgType,
+                                    updateMessageType,
                                     ticker,
                                     dttm,
                                     exchange,
-                                    (float)bidSize,
-                                    (float)bidPrice,
-                                    (float)midPrice,
-                                    (float)askSize,
-                                    (float)askPrice);
+                                    bidSize,
+                                    bidPrice,
+                                    midPrice,
+                                    askSize,
+                                    askPrice);
                                 response = new DataResponse(
-                                    responseMsgType, 
+                                    messageType, 
                                     service, 
                                     data);
                                 break;
                             default:
                                 throw new NotSupportedException(
-                                    $"Data message type '{dataMsgType}' not supported.");
+                                    $"Data message type '{updateMessageType}' not supported.");
                         }
                         break;
                     case "iex":
+                        goto default;
                     case "fx":
-                        throw new NotSupportedException(
-                            $"Service '{service}' not supported.");
+                        jsonElement = jsonElement.GetProperty("data");
+                        updateMessageType = jsonElement[0].ToString()[0];
+                        ticker = jsonElement[1].GetString();
+                        dttm = jsonElement[2].GetDateTime();
+                        bidSize = (float)jsonElement[3].GetDouble();
+                        bidPrice = (float)jsonElement[4].GetDouble();
+                        midPrice = (float)jsonElement[5].GetDouble();
+                        askSize = (float)jsonElement[6].GetDouble();
+                        askPrice = (float)jsonElement[7].GetDouble();
+                        data = new ForexQuoteUpdate(
+                            updateMessageType,
+                            ticker,
+                            dttm,
+                            bidSize,
+                            bidPrice,
+                            midPrice,
+                            askSize,
+                            askPrice);
+                        response = new DataResponse(
+                            messageType,
+                            service,
+                            data);
+                        break;
                     default:
                         throw new NotSupportedException(
                             $"Service '{service}' not supported.");
@@ -88,37 +121,37 @@ internal class ResponseFactory
                 break;
             case 'U': // Updating existing data
                 throw new NotSupportedException(
-                    $"Message type '{responseMsgType}' not supported.");
+                    $"Message type '{messageType}' not supported.");
             case 'D': // Deleting existing data
                 throw new NotSupportedException(
-                    $"Message type '{responseMsgType}' not supported.");
+                    $"Message type '{messageType}' not supported.");
             case 'I': // Informational/meta data
                 var responseElement = jsonElement.GetProperty("response");
                 var responseCode = responseElement.GetProperty("code").GetInt32();
                 var responseMessage = responseElement.GetProperty("message").GetString();
                 var subId = jsonElement.GetProperty("data").GetProperty("subscriptionId").GetInt32();
                 response = new UtilityResponse(
-                    responseMsgType,
+                    messageType,
                     responseCode,
                     responseMessage,
                     subId);
                 break;
             case 'E': // Error messages
                 throw new NotSupportedException(
-                    $"Error message type '{responseMsgType}' not supported.");
+                    $"Error message type '{messageType}' not supported.");
             case 'H': // Heartbeats
                 responseElement = jsonElement.GetProperty("response");
                 responseCode = responseElement.GetProperty("code").GetInt32();
                 responseMessage = responseElement.GetProperty("message").GetString();
                 response = new UtilityResponse(
-                    responseMsgType,
+                    messageType,
                     responseCode,
                     responseMessage,
                     null);
                 break;
             default:
                 throw new NotSupportedException(
-                    $"Message type '{responseMsgType}' not supported.");
+                    $"Message type '{messageType}' not supported.");
         }
 
         return response;
