@@ -120,11 +120,9 @@ internal class ResponseFactory
                 }
                 break;
             case 'U': // Updating existing data
-                throw new NotSupportedException(
-                    $"Message type '{messageType}' not supported.");
+                goto default;
             case 'D': // Deleting existing data
-                throw new NotSupportedException(
-                    $"Message type '{messageType}' not supported.");
+                goto default;
             case 'I': // Informational/meta data
                 var responseElement = jsonElement.GetProperty("response");
                 var responseCode = responseElement.GetProperty("code").GetInt32();
@@ -137,8 +135,7 @@ internal class ResponseFactory
                     subId);
                 break;
             case 'E': // Error messages
-                throw new NotSupportedException(
-                    $"Error message type '{messageType}' not supported.");
+                goto default;
             case 'H': // Heartbeats
                 responseElement = jsonElement.GetProperty("response");
                 responseCode = responseElement.GetProperty("code").GetInt32();
