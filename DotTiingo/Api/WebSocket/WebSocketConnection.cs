@@ -77,11 +77,17 @@ internal sealed class WebSocketConnection : ITiingoWebSocketConnection
         return response;
     }
 
+    private bool _disposed = false;
     public void Dispose()
     {
+        if (_disposed)
+            return;
+
         _cancelTokenSource.Cancel();
         _cancelTokenSource.Dispose();
         _clientWebSocket.Dispose();
         GC.SuppressFinalize(this);
+
+        _disposed = true;
     }
 }

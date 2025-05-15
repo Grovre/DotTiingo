@@ -25,7 +25,7 @@ public class WebSocketApiTests
     [Test]
     public async Task Crypto()
     {
-        var conn = await _client.WebSocket.Crypto.Connect(2, CancellationToken.None);
+        using var conn = await _client.WebSocket.Crypto.Connect(2, CancellationToken.None);
 
         var datum = 0;
         var utilities = 0;
@@ -58,7 +58,7 @@ public class WebSocketApiTests
     [Test]
     public async Task Forex()
     {
-        var conn = await _client.WebSocket.Forex.Connect(2, CancellationToken.None);
+        using var conn = await _client.WebSocket.Forex.Connect(2, CancellationToken.None);
 
         var datum = 0;
         var utilities = 0;
