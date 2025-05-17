@@ -58,6 +58,12 @@ public class WebSocketApiTests
     [Test]
     public async Task Forex()
     {
+        var now = DateTime.UtcNow;
+        if ((now.DayOfWeek == DayOfWeek.Friday && now.TimeOfDay >= TimeSpan.FromHours(22)) ||
+            (now.DayOfWeek == DayOfWeek.Saturday) ||
+            (now.DayOfWeek == DayOfWeek.Sunday && now.TimeOfDay < TimeSpan.FromHours(22)))
+            Assert.Fail("Markets are closed");
+
         using var conn = await _client.WebSocket.Forex.Connect(2, CancellationToken.None);
 
         var datum = 0;
