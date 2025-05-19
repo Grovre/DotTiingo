@@ -11,14 +11,35 @@ using DotTiingo.Extensions;
 
 namespace DotTiingo.Api;
 
+/// <summary>
+/// Provides access to end-of-day price and meta data endpoints.
+/// </summary>
 public interface ITiingoRestEndOfDayApi
 {
+    /// <summary>
+    /// Gets end-of-day prices for a given ticker and interval.
+    /// </summary>
+    /// <param name="ticker">The ticker symbol.</param>
+    /// <param name="interval">The date interval (optional).</param>
+    /// <param name="resampleFreq">The resample frequency (optional).</param>
+    /// <param name="sortBy">The field to sort by (optional).</param>
+    /// <returns>Array of <see cref="EndOfDayPrice"/>.</returns>
     Task<EndOfDayPrice[]> GetEndOfDayPrices(string ticker, DateTimeInterval? interval, string? resampleFreq, string? sortBy);
+
+    /// <summary>
+    /// Gets meta data for a given ticker.
+    /// </summary>
+    /// <param name="ticker">The ticker symbol.</param>
+    /// <returns>The <see cref="EndOfDayMeta"/> data.</returns>
     Task<EndOfDayMeta> GetEndOfDayMeta(string ticker);
 }
 
+/// <summary>
+/// Implementation of <see cref="ITiingoRestEndOfDayApi"/>.
+/// </summary>
 public class RestEndOfDayApi(HttpClient httpClient) : ITiingoRestEndOfDayApi
 {
+    /// <inheritdoc/>
     public Task<EndOfDayPrice[]> GetEndOfDayPrices(string ticker, DateTimeInterval? interval, string? resampleFreq, string? sortBy)
     {
         var fullUrl = $"{TiingoApiHelper.RestBaseUrl}/tiingo/daily/{ticker}/prices";
@@ -36,6 +57,7 @@ public class RestEndOfDayApi(HttpClient httpClient) : ITiingoRestEndOfDayApi
         return apiResultFactory.CreateGet(JsonContent.Create(content), fullUrl);
     }
 
+    /// <inheritdoc/>
     public Task<EndOfDayMeta> GetEndOfDayMeta(string ticker)
     {
         var fullUrl = $"{TiingoApiHelper.RestBaseUrl}/tiingo/daily/{ticker}";

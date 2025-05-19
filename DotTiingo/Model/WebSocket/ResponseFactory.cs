@@ -15,14 +15,14 @@ internal class ResponseFactory
     {
         using var document = JsonDocument.Parse(json);
         var jsonElement = document.RootElement;
-        var messageType = jsonElement.GetProperty("messageType").GetString()[0];
+        var messageType = jsonElement.GetProperty("messageType").GetString()![0];
         AbstractResponse response;
         IResponseData data;
 
         switch (messageType)
         {
             case 'A': // New data
-                var service = jsonElement.GetProperty("service").GetString();
+                var service = jsonElement.GetProperty("service").GetString()!;
                 string ticker;
                 DateTime dttm;
                 string exchange;
@@ -38,13 +38,15 @@ internal class ResponseFactory
                 {
                     case "crypto_data":
                         jsonElement = jsonElement.GetProperty("data");
-                        updateMessageType = jsonElement[0].GetString()[0];
+                        updateMessageType = jsonElement[0].GetString()![0];
                         switch (updateMessageType)
                         {
                             case 'T':
-                                ticker = jsonElement[1].GetString();
+                                ticker = jsonElement[1].GetString()!;
+                                NullCheck(ticker, nameof(ticker));
                                 dttm = jsonElement[2].GetDateTime();
-                                exchange = jsonElement[3].GetString();
+                                exchange = jsonElement[3].GetString()!;
+                                NullCheck(exchange, nameof(exchange));
                                 lastSize = (float)jsonElement[4].GetDouble();
                                 lastPrice = (float)jsonElement[5].GetDouble();
                                 data = new CryptoTradeUpdate(
@@ -60,9 +62,9 @@ internal class ResponseFactory
                                     data);
                                 break;
                             case 'Q':
-                                ticker = jsonElement[1].GetString();
+                                ticker = jsonElement[1].GetString()!;
                                 dttm = jsonElement[2].GetDateTime();
-                                exchange = jsonElement[3].GetString();
+                                exchange = jsonElement[3].GetString()!;
                                 bidSize = (float)jsonElement[4].GetDouble();
                                 bidPrice = (float)jsonElement[5].GetDouble();
                                 midPrice = (float)jsonElement[6].GetDouble();
@@ -95,7 +97,7 @@ internal class ResponseFactory
                         {
                             case 3:
                                 dttm = jsonElement[0].GetDateTime();
-                                ticker = jsonElement[1].GetString();
+                                ticker = jsonElement[1].GetString()!;
                                 lastPrice = (float)jsonElement[2].GetDouble(); // Ref price
                                 data = new IexReferencePriceUpdate(
                                     dttm,
@@ -114,8 +116,8 @@ internal class ResponseFactory
                         break;
                     case "fx":
                         jsonElement = jsonElement.GetProperty("data");
-                        updateMessageType = jsonElement[0].ToString()[0];
-                        ticker = jsonElement[1].GetString();
+                        updateMessageType = jsonElement[0].ToString()![0];
+                        ticker = jsonElement[1].GetString()!;
                         dttm = jsonElement[2].GetDateTime();
                         bidSize = (float)jsonElement[3].GetDouble();
                         bidPrice = (float)jsonElement[4].GetDouble();
@@ -148,7 +150,7 @@ internal class ResponseFactory
             case 'I': // Informational/meta data
                 var responseElement = jsonElement.GetProperty("response");
                 var responseCode = responseElement.GetProperty("code").GetInt32();
-                var responseMessage = responseElement.GetProperty("message").GetString();
+                var responseMessage = responseElement.GetProperty("message").GetString()!;
                 var subId = jsonElement.GetProperty("data").GetProperty("subscriptionId").GetInt32();
                 response = new UtilityResponse(
                     messageType,
@@ -161,7 +163,7 @@ internal class ResponseFactory
             case 'H': // Heartbeats
                 responseElement = jsonElement.GetProperty("response");
                 responseCode = responseElement.GetProperty("code").GetInt32();
-                responseMessage = responseElement.GetProperty("message").GetString();
+                responseMessage = responseElement.GetProperty("message").GetString()!;
                 response = new UtilityResponse(
                     messageType,
                     responseCode,
@@ -174,5 +176,11 @@ internal class ResponseFactory
         }
 
         return response;
+    }
+
+    private static void NullCheck(object? o, string name)
+    {
+        if (o == null)
+            throw new NullReferenceException($"Deserialized json variable '{name}' was null");
     }
 }

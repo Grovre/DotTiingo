@@ -10,13 +10,30 @@ using DotTiingo.Model.Rest;
 
 namespace DotTiingo.Api;
 
+/// <summary>
+/// Provides access to news endpoints.
+/// </summary>
 public interface ITiingoRestNewsApi
 {
+    /// <summary>
+    /// Gets news articles for the specified tickers, sources, and options.
+    /// </summary>
+    /// <param name="tickers">The ticker symbols (optional).</param>
+    /// <param name="sources">The news sources (optional).</param>
+    /// <param name="interval">The date interval (optional).</param>
+    /// <param name="limit">The maximum number of articles to return (optional).</param>
+    /// <param name="offset">The offset for pagination (optional).</param>
+    /// <param name="sortBy">The field to sort by (optional).</param>
+    /// <returns>Array of <see cref="NewsArticle"/>.</returns>
     Task<NewsArticle[]> GetNews(IEnumerable<string>? tickers, IEnumerable<string>? sources, DateTimeInterval? interval, int? limit, int? offset, string? sortBy);
 }
 
+/// <summary>
+/// Implementation of <see cref="ITiingoRestNewsApi"/>.
+/// </summary>
 public class RestNewsApi(HttpClient httpClient) : ITiingoRestNewsApi
 {
+    /// <inheritdoc/>
     public Task<NewsArticle[]> GetNews(IEnumerable<string>? tickers, IEnumerable<string>? sources, DateTimeInterval? interval, int? limit, int? offset, string? sortBy)
     {
         var fullUrl = $"{TiingoApiHelper.RestBaseUrl}/tiingo/news/";

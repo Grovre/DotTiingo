@@ -38,7 +38,7 @@ internal class WebSocketConnectionFactory(WebSocketAuthorization wsAuth)
                 throw new Exception(
             $"WebSocket authorization response was not of type 'I' (info) but {utilityResponse.MessageType}");
         };
-        authCheck += (sender, _) => ((ITiingoWebSocketConnection)sender).OnResponseReceived -= authCheck;
+        authCheck += (sender, _) => ((ITiingoWebSocketConnection)sender!).OnResponseReceived -= authCheck;
         conn.OnResponseReceived += authCheck;
         await cws.SendAsync(authBytes, WebSocketMessageType.Text, true, cancelToken);
         return conn;

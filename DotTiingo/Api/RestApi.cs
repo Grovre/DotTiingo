@@ -12,22 +12,49 @@ using System.Web;
 
 namespace DotTiingo.Api;
 
+/// <summary>
+/// Aggregates all Tiingo REST API endpoints.
+/// </summary>
 public interface ITiingoRestApi : IDisposable
 {
-    public ITiingoRestEndOfDayApi EndOfDay { get; }
-    public ITiingoRestIexApi Iex { get; }
-    public ITiingoRestCryptoApi Crypto { get; }
-    public ITiingoRestNewsApi News { get; }
+    /// <summary>
+    /// Provides access to end-of-day price and meta data endpoints.
+    /// </summary>
+    ITiingoRestEndOfDayApi EndOfDay { get; }
+    /// <summary>
+    /// Provides access to IEX price endpoints.
+    /// </summary>
+    ITiingoRestIexApi Iex { get; }
+    /// <summary>
+    /// Provides access to cryptocurrency price and meta data endpoints.
+    /// </summary>
+    ITiingoRestCryptoApi Crypto { get; }
+    /// <summary>
+    /// Provides access to news endpoints.
+    /// </summary>
+    ITiingoRestNewsApi News { get; }
 }
 
+/// <summary>
+/// Implementation of <see cref="ITiingoRestApi"/> for accessing Tiingo REST endpoints.
+/// </summary>
 public sealed class RestApi : ITiingoRestApi
 {
     private readonly HttpClient _httpClient;
+    /// <inheritdoc/>
     public ITiingoRestEndOfDayApi EndOfDay { get; }
+    /// <inheritdoc/>
     public ITiingoRestIexApi Iex { get; }
+    /// <inheritdoc/>
     public ITiingoRestCryptoApi Crypto { get; }
+    /// <inheritdoc/>
     public ITiingoRestNewsApi News { get; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RestApi"/> class.
+    /// </summary>
+    /// <param name="httpClient">The HTTP client to use for requests.</param>
+    /// <param name="token">The Tiingo API token.</param>
     public RestApi(HttpClient httpClient, string token)
     {
         _httpClient = httpClient;
@@ -39,6 +66,7 @@ public sealed class RestApi : ITiingoRestApi
         News = new RestNewsApi(_httpClient);
     }
 
+    /// <inheritdoc/>
     public void Dispose()
     {
         _httpClient.Dispose();
