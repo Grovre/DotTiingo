@@ -37,8 +37,19 @@ public interface ITiingoRestCryptoApi
 /// <summary>
 /// Implementation of <see cref="ITiingoRestCryptoApi"/>.
 /// </summary>
-public class RestCryptoApi(HttpClient httpClient) : ITiingoRestCryptoApi
+public class RestCryptoApi : ITiingoRestCryptoApi
 {
+    private readonly HttpClient _httpClient;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RestCryptoApi"/> class.
+    /// </summary>
+    /// <param name="httpClient">The HTTP client to use for requests.</param>
+    public RestCryptoApi(HttpClient httpClient)
+    {
+        _httpClient = httpClient;
+    }
+
     /// <inheritdoc/>
     public Task<CryptoPrice[]> GetCryptoPrices(IEnumerable<string> tickers, IEnumerable<string>? exchanges, DateTimeInterval? interval, string? resampleFreq)
     {
@@ -53,7 +64,7 @@ public class RestCryptoApi(HttpClient httpClient) : ITiingoRestCryptoApi
         if (resampleFreq != null)
             content.resampleFreq = resampleFreq;
 
-        var apiResultFactory = new ApiResultFactory<CryptoPrice[]>(httpClient);
+        var apiResultFactory = new ApiResultFactory<CryptoPrice[]>(_httpClient);
         return apiResultFactory.CreateGet(JsonContent.Create(content), fullUrl);
     }
 
@@ -65,7 +76,7 @@ public class RestCryptoApi(HttpClient httpClient) : ITiingoRestCryptoApi
             : $"?tickers={string.Join(',', tickers)}";
         var fullUrl = $"{TiingoApiHelper.RestBaseUrl}/tiingo/crypto?{queryTickers}";
 
-        var apiResultFactory = new ApiResultFactory<CryptoMeta[]>(httpClient);
+        var apiResultFactory = new ApiResultFactory<CryptoMeta[]>(_httpClient);
         return apiResultFactory.CreateGet(null, fullUrl);
     }
 }

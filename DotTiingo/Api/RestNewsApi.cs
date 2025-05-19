@@ -31,8 +31,19 @@ public interface ITiingoRestNewsApi
 /// <summary>
 /// Implementation of <see cref="ITiingoRestNewsApi"/>.
 /// </summary>
-public class RestNewsApi(HttpClient httpClient) : ITiingoRestNewsApi
+public class RestNewsApi : ITiingoRestNewsApi
 {
+    private readonly HttpClient _httpClient;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RestNewsApi"/> class.
+    /// </summary>
+    /// <param name="httpClient">The HTTP client to use for requests.</param>
+    public RestNewsApi(HttpClient httpClient)
+    {
+        _httpClient = httpClient;
+    }
+
     /// <inheritdoc/>
     public Task<NewsArticle[]> GetNews(IEnumerable<string>? tickers, IEnumerable<string>? sources, DateTimeInterval? interval, int? limit, int? offset, string? sortBy)
     {
@@ -54,7 +65,7 @@ public class RestNewsApi(HttpClient httpClient) : ITiingoRestNewsApi
         if (sortBy != null)
             content.sortBy = sortBy;
 
-        var apiResultFactory = new ApiResultFactory<NewsArticle[]>(httpClient);
+        var apiResultFactory = new ApiResultFactory<NewsArticle[]>(_httpClient);
         return apiResultFactory.CreateGet(JsonContent.Create(content), fullUrl);
     }
 }

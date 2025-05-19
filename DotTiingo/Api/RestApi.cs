@@ -66,7 +66,9 @@ public sealed class RestApi : ITiingoRestApi
         News = new RestNewsApi(_httpClient);
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Disposes the underlying HTTP client and suppresses finalization.
+    /// </summary>
     public void Dispose()
     {
         _httpClient.Dispose();

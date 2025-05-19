@@ -38,8 +38,19 @@ public interface ITiingoRestIexApi
 /// <summary>
 /// Implementation of <see cref="ITiingoRestIexApi"/>.
 /// </summary>
-public class RestIexApi(HttpClient httpClient) : ITiingoRestIexApi
+public class RestIexApi : ITiingoRestIexApi
 {
+    private readonly HttpClient _httpClient;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RestIexApi"/> class.
+    /// </summary>
+    /// <param name="httpClient">The HTTP client to use for requests.</param>
+    public RestIexApi(HttpClient httpClient)
+    {
+        _httpClient = httpClient;
+    }
+
     /// <inheritdoc/>
     public Task<IexCurrentTopOfBookAndLastPrice[]> GetIexCurrentTopOfBookAndLastPrice(IEnumerable<string>? tickers)
     {
@@ -48,7 +59,7 @@ public class RestIexApi(HttpClient httpClient) : ITiingoRestIexApi
             : $"?tickers={string.Join(',', tickers)}";
         var fullUrl = $"{TiingoApiHelper.RestBaseUrl}/iex/{queryTickers}";
 
-        var apiResultFactory = new ApiResultFactory<IexCurrentTopOfBookAndLastPrice[]>(httpClient);
+        var apiResultFactory = new ApiResultFactory<IexCurrentTopOfBookAndLastPrice[]>(_httpClient);
         return apiResultFactory.CreateGet(null, fullUrl);
     }
 
@@ -68,7 +79,7 @@ public class RestIexApi(HttpClient httpClient) : ITiingoRestIexApi
         if (forceFill != null)
             content.forceFill = forceFill.Value;
 
-        var apiResultFactory = new ApiResultFactory<IexHistoricalPrice[]>(httpClient);
+        var apiResultFactory = new ApiResultFactory<IexHistoricalPrice[]>(_httpClient);
         return apiResultFactory.CreateGet(JsonContent.Create(content), fullUrl);
     }
 }

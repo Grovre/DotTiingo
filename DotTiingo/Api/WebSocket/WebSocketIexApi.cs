@@ -39,6 +39,12 @@ internal class WebSocketIexApi : ITiingoWebSocketIexApi
     }
 
     /// <inheritdoc/>
+    /// <summary>
+    /// Connects to the Tiingo IEX WebSocket API.
+    /// </summary>
+    /// <param name="thresholdLevel">The threshold level for the connection.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>An <see cref="ITiingoWebSocketConnection"/> instance.</returns>
     public Task<ITiingoWebSocketConnection> Connect(int thresholdLevel, CancellationToken cancellationToken)
     {
         var wsAuth = new WebSocketAuthorization("subscribe", _token, thresholdLevel);

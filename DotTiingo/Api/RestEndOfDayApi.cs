@@ -37,8 +37,19 @@ public interface ITiingoRestEndOfDayApi
 /// <summary>
 /// Implementation of <see cref="ITiingoRestEndOfDayApi"/>.
 /// </summary>
-public class RestEndOfDayApi(HttpClient httpClient) : ITiingoRestEndOfDayApi
+public class RestEndOfDayApi : ITiingoRestEndOfDayApi
 {
+    private readonly HttpClient _httpClient;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RestEndOfDayApi"/> class.
+    /// </summary>
+    /// <param name="httpClient">The HTTP client to use for requests.</param>
+    public RestEndOfDayApi(HttpClient httpClient)
+    {
+        _httpClient = httpClient;
+    }
+
     /// <inheritdoc/>
     public Task<EndOfDayPrice[]> GetEndOfDayPrices(string ticker, DateTimeInterval? interval, string? resampleFreq, string? sortBy)
     {
@@ -53,7 +64,7 @@ public class RestEndOfDayApi(HttpClient httpClient) : ITiingoRestEndOfDayApi
         if (sortBy != null)
             content.sort = sortBy;
 
-        var apiResultFactory = new ApiResultFactory<EndOfDayPrice[]>(httpClient);
+        var apiResultFactory = new ApiResultFactory<EndOfDayPrice[]>(_httpClient);
         return apiResultFactory.CreateGet(JsonContent.Create(content), fullUrl);
     }
 
@@ -61,7 +72,7 @@ public class RestEndOfDayApi(HttpClient httpClient) : ITiingoRestEndOfDayApi
     public Task<EndOfDayMeta> GetEndOfDayMeta(string ticker)
     {
         var fullUrl = $"{TiingoApiHelper.RestBaseUrl}/tiingo/daily/{ticker}";
-        var apiResultFactory = new ApiResultFactory<EndOfDayMeta>(httpClient);
+        var apiResultFactory = new ApiResultFactory<EndOfDayMeta>(_httpClient);
         return apiResultFactory.CreateGet(null, fullUrl);
     }
 }
