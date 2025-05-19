@@ -1,26 +1,23 @@
 ﻿using DotTiingo.Model.WebSocket;
-using DotTiingo.Model.WebSocket.Response;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.WebSockets;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace DotTiingo.Api.WebSocket;
 
-public interface ITiingoWebSocketCryptoApi
+public interface ITiingoWebSocketIexApi
 {
     Task<ITiingoWebSocketConnection> Connect(int thresholdLevel, CancellationToken cancellationToken);
 }
 
-internal class WebSocketCryptoApi : ITiingoWebSocketCryptoApi
+internal class WebSocketIexApi : ITiingoWebSocketIexApi
 {
-    private const string BaseUrl = $"{TiingoApiHelper.WebSocketBaseUrl}/crypto";
+    private const string BaseUrl = $"{TiingoApiHelper.WebSocketBaseUrl}/iex";
     private readonly string _token;
 
-    public WebSocketCryptoApi(string token)
+    public WebSocketIexApi(string token)
     {
         _token = token;
     }

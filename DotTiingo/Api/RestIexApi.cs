@@ -1,4 +1,5 @@
-﻿using DotTiingo.Model.Rest;
+﻿using DotTiingo.Extensions;
+using DotTiingo.Model.Rest;
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
@@ -35,8 +36,7 @@ public class RestIexApi(HttpClient httpClient) : ITiingoRestIexApi
         dynamic content = new ExpandoObject();
         if (interval != null)
         {
-            content.startDate = interval.Start.ToString("yyyy-MM-dd");
-            content.endDate = interval.End.ToString("yyyy-MM-dd");
+            (content.startDate, content.endDate) = (interval.Start.ToTiingoString(), interval.End.ToTiingoString());
         }
         if (resampleFreq != null)
             content.resampleFreq = resampleFreq;

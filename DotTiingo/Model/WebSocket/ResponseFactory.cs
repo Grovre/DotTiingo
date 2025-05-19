@@ -89,7 +89,29 @@ internal class ResponseFactory
                         }
                         break;
                     case "iex":
-                        goto default;
+                        jsonElement = jsonElement.GetProperty("data");
+                        var arrLen = jsonElement.GetArrayLength();
+                        switch (arrLen)
+                        {
+                            case 3:
+                                dttm = jsonElement[0].GetDateTime();
+                                ticker = jsonElement[1].GetString();
+                                lastPrice = (float)jsonElement[2].GetDouble(); // Ref price
+                                data = new IexReferencePriceUpdate(
+                                    dttm,
+                                    ticker,
+                                    lastPrice);
+                                response = new DataResponse(
+                                    messageType,
+                                    service,
+                                    data);
+                                break;
+                            case 16:
+                            default:
+                                throw new NotSupportedException(
+                                    $"IEX message with array length '{arrLen}' not supported.");
+                        }
+                        break;
                     case "fx":
                         jsonElement = jsonElement.GetProperty("data");
                         updateMessageType = jsonElement[0].ToString()[0];
