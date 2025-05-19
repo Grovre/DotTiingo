@@ -18,26 +18,18 @@ public interface ITiingoRestIexApi
 
 public class RestIexApi(HttpClient httpClient) : ITiingoRestIexApi
 {
-    public async Task<IexCurrentTopOfBookAndLastPrice[]> GetIexCurrentTopOfBookAndLastPrice(IEnumerable<string>? tickers)
+    public Task<IexCurrentTopOfBookAndLastPrice[]> GetIexCurrentTopOfBookAndLastPrice(IEnumerable<string>? tickers)
     {
         var queryTickers = tickers == null
             ? string.Empty
             : $"?tickers={string.Join(',', tickers)}";
         var fullUrl = $"{TiingoApiHelper.RestBaseUrl}/iex/{queryTickers}";
 
-        using var req = new HttpRequestMessage(HttpMethod.Get, fullUrl);
-        using var response = await httpClient.SendAsync(req);
-#if DEBUG
-        var responseString = await response.Content.ReadAsStringAsync();
-#endif
-        response.EnsureSuccessStatusCode();
-        var price = await response.Content.ReadFromJsonAsync<IexCurrentTopOfBookAndLastPrice[]>();
-
-        return price
-            ?? throw new Exception();
+        var apiResultFactory = new ApiResultFactory<IexCurrentTopOfBookAndLastPrice[]>(httpClient);
+        return apiResultFactory.CreateGet(null, fullUrl);
     }
 
-    public async Task<IexHistoricalPrice[]> GetIexHistoricalPrices(string ticker, DateTimeInterval? interval, string? resampleFreq, bool? afterHours, bool? forceFill)
+    public Task<IexHistoricalPrice[]> GetIexHistoricalPrices(string ticker, DateTimeInterval? interval, string? resampleFreq, bool? afterHours, bool? forceFill)
     {
         var fullUrl = $"{TiingoApiHelper.RestBaseUrl}/iex/{ticker}/prices";
         dynamic content = new ExpandoObject();
@@ -53,16 +45,7 @@ public class RestIexApi(HttpClient httpClient) : ITiingoRestIexApi
         if (forceFill != null)
             content.forceFill = forceFill.Value;
 
-        using var req = new HttpRequestMessage(HttpMethod.Get, fullUrl);
-        req.Content = JsonContent.Create(content);
-        using var response = await httpClient.SendAsync(req);
-#if DEBUG
-        var responseString = await response.Content.ReadAsStringAsync();
-#endif
-        response.EnsureSuccessStatusCode();
-        var prices = await response.Content.ReadFromJsonAsync<IexHistoricalPrice[]>();
-
-        return prices
-            ?? throw new Exception();
+        var apiResultFactory = new ApiResultFactory<IexHistoricalPrice[]>(httpClient);
+        return apiResultFactory.CreateGet(JsonContent.Create(content), fullUrl);
     }
 }

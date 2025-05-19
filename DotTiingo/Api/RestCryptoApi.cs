@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using DotTiingo.Model.Rest;
+using DotTiingo.Extensions;
 
 namespace DotTiingo.Api;
 
@@ -18,7 +19,7 @@ public interface ITiingoRestCryptoApi
 
 public class RestCryptoApi(HttpClient httpClient) : ITiingoRestCryptoApi
 {
-    public async Task<CryptoPrice[]> GetCryptoPrices(IEnumerable<string> tickers, IEnumerable<string>? exchanges, DateTimeInterval? interval, string? resampleFreq)
+    public Task<CryptoPrice[]> GetCryptoPrices(IEnumerable<string> tickers, IEnumerable<string>? exchanges, DateTimeInterval? interval, string? resampleFreq)
     {
         var fullUrl = $"{TiingoApiHelper.RestBaseUrl}/tiingo/crypto/prices?tickers={string.Join(',', tickers)}";
         dynamic content = new ExpandoObject();
@@ -26,41 +27,23 @@ public class RestCryptoApi(HttpClient httpClient) : ITiingoRestCryptoApi
             content.exchanges = exchanges;
         if (interval != null)
         {
-            content.startDate = interval.Start.ToString("yyyy-MM-dd");
-            content.endDate = interval.End.ToString("yyyy-MM-dd");
+            (content.startDate, content.endDate) = interval.ToTiingoString();
         }
         if (resampleFreq != null)
             content.resampleFreq = resampleFreq;
 
-        using var req = new HttpRequestMessage(HttpMethod.Get, fullUrl);
-        req.Content = JsonContent.Create(content);
-        using var response = await httpClient.SendAsync(req);
-#if DEBUG
-        var responseString = await response.Content.ReadAsStringAsync();
-#endif
-        response.EnsureSuccessStatusCode();
-        var cryptoPrices = await response.Content.ReadFromJsonAsync<CryptoPrice[]>();
-
-        return cryptoPrices
-            ?? throw new Exception();
+        var apiResultFactory = new ApiResultFactory<CryptoPrice[]>(httpClient);
+        return apiResultFactory.CreateGet(JsonContent.Create(content), fullUrl);
     }
 
-    public async Task<CryptoMeta[]> GetCryptoMeta(IEnumerable<string>? tickers)
+    public Task<CryptoMeta[]> GetCryptoMeta(IEnumerable<string>? tickers)
     {
         var queryTickers = tickers == null
             ? string.Empty
             : $"?tickers={string.Join(',', tickers)}";
         var fullUrl = $"{TiingoApiHelper.RestBaseUrl}/tiingo/crypto?{queryTickers}";
 
-        using var req = new HttpRequestMessage(HttpMethod.Get, fullUrl);
-        using var response = await httpClient.SendAsync(req);
-#if DEBUG
-        var responseString = await response.Content.ReadAsStringAsync();
-#endif
-        response.EnsureSuccessStatusCode();
-        var meta = await response.Content.ReadFromJsonAsync<CryptoMeta[]>();
-
-        return meta
-            ?? throw new Exception();
+        var apiResultFactory = new ApiResultFactory<CryptoMeta[]>(httpClient);
+        return apiResultFactory.CreateGet(null, fullUrl);
     }
 }

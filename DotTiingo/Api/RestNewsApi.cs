@@ -17,7 +17,7 @@ public interface ITiingoRestNewsApi
 
 public class RestNewsApi(HttpClient httpClient) : ITiingoRestNewsApi
 {
-    public async Task<NewsArticle[]> GetNews(IEnumerable<string>? tickers, IEnumerable<string>? sources, DateTimeInterval? interval, int? limit, int? offset, string? sortBy)
+    public Task<NewsArticle[]> GetNews(IEnumerable<string>? tickers, IEnumerable<string>? sources, DateTimeInterval? interval, int? limit, int? offset, string? sortBy)
     {
         var fullUrl = $"{TiingoApiHelper.RestBaseUrl}/tiingo/news/";
         dynamic content = new ExpandoObject();
@@ -37,16 +37,7 @@ public class RestNewsApi(HttpClient httpClient) : ITiingoRestNewsApi
         if (sortBy != null)
             content.sortBy = sortBy;
 
-        using var req = new HttpRequestMessage(HttpMethod.Get, fullUrl);
-        req.Content = JsonContent.Create(content);
-        using var response = await httpClient.SendAsync(req);
-#if DEBUG
-        var responseString = await response.Content.ReadAsStringAsync();
-#endif
-        response.EnsureSuccessStatusCode();
-        var news = await response.Content.ReadFromJsonAsync<NewsArticle[]>();
-
-        return news
-            ?? throw new Exception();
+        var apiResultFactory = new ApiResultFactory<NewsArticle[]>(httpClient);
+        return apiResultFactory.CreateGet(JsonContent.Create(content), fullUrl);
     }
 }
