@@ -55,5 +55,5 @@ public enum ForexThresholdLevel
     /// <summary>
     /// A top-of-book update that is due to a change in either the bid/ask price or size.
     /// </summary>
-    TopOfBook = 7
+    TopOfBook = 5
 }
