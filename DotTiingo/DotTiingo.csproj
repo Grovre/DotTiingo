@@ -4,6 +4,21 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Title>DotTiingo</Title>
+    <Description>Easy library for access to Tiingo's API</Description>
+    <Copyright>MIT</Copyright>
+    <RepositoryUrl>https://github.com/Grovre/DotTiingo</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageOutputPath>$(OutputPath)</PackageOutputPath>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE.txt">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
 </Project>
