@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.13.35931.197 d17.13
+VisualStudioVersion = 17.13.35931.197
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotTiingo", "DotTiingo\DotTiingo.csproj", "{F01B75F6-6400-46AF-BB68-F30E620AE813}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Testing", "Testing\Testing.csproj", "{8E8EE19A-2C2D-4063-AE6A-8B16B7FEDB43}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example", "Example\Example.csproj", "{990573DE-D777-492A-8223-24E285E1102E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{8E8EE19A-2C2D-4063-AE6A-8B16B7FEDB43}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8E8EE19A-2C2D-4063-AE6A-8B16B7FEDB43}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8E8EE19A-2C2D-4063-AE6A-8B16B7FEDB43}.Release|Any CPU.Build.0 = Release|Any CPU
+		{990573DE-D777-492A-8223-24E285E1102E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{990573DE-D777-492A-8223-24E285E1102E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{990573DE-D777-492A-8223-24E285E1102E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{990573DE-D777-492A-8223-24E285E1102E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
