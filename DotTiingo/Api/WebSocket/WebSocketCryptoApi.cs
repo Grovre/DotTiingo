@@ -49,3 +49,18 @@ internal class WebSocketCryptoApi : ITiingoWebSocketCryptoApi
         return connFactory.CreateConnectionAsync(BaseUrl, cancellationToken);
     }
 }
+
+/// <summary>
+/// Specifies the threshold level for the Tiingo Crypto WebSocket feed, determining the type and amount of data received.
+/// </summary>
+public enum CryptoThresholdLevel
+{
+    /// <summary>
+    /// Top-of-Book quote updates as well as Trade updates. Both quote and trade updates are per-exchange.
+    /// </summary>
+    QuoteAndTrade = 2,
+    /// <summary>
+    /// Trade Updates per-exchange only.
+    /// </summary>
+    Trade = 5
+}

@@ -52,3 +52,22 @@ internal class WebSocketIexApi : ITiingoWebSocketIexApi
         return connFactory.CreateConnectionAsync(BaseUrl, cancellationToken);
     }
 }
+
+/// <summary>
+/// Specifies the threshold level for the Tiingo IEX WebSocket feed, determining the type and amount of data received.
+/// </summary>
+public enum IexThresholdLevel
+{
+    /// <summary>
+    /// Receive all Tiingo Reference price messages.
+    /// </summary>
+    ReferencePrice = 6,
+    /// <summary>
+    /// All updates from IEX. Be careful with this as it is A LOT of data.
+    /// </summary>
+    AllUpdates = 0,
+    /// <summary>
+    /// If a quote: sends updates where mid is not null AND there is a change in mid by at least $0.01 OR If a trade: send a trade if it differs from the last trade price.
+    /// </summary>
+    Filtered = 5
+}

@@ -46,3 +46,14 @@ internal class WebSocketForexApi : ITiingoWebSocketForexApi
         return connFactory.CreateConnectionAsync(BaseUrl, cancellationToken);
     }
 }
+
+/// <summary>
+/// Specifies the threshold level for the Tiingo Forex WebSocket feed, determining the type and amount of data received.
+/// </summary>
+public enum ForexThresholdLevel
+{
+    /// <summary>
+    /// A top-of-book update that is due to a change in either the bid/ask price or size.
+    /// </summary>
+    TopOfBook = 7
+}
