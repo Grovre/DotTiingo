@@ -21,7 +21,7 @@ public interface ITiingoWebSocketCryptoApi
     /// <param name="thresholdLevel">The threshold level for the connection.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>An <see cref="ITiingoWebSocketConnection"/> instance.</returns>
-    Task<ITiingoWebSocketConnection> Connect(int thresholdLevel, CancellationToken cancellationToken);
+    Task<ITiingoWebSocketConnection> Connect(CryptoThresholdLevel thresholdLevel, CancellationToken cancellationToken);
 }
 
 /// <summary>
@@ -42,9 +42,9 @@ internal class WebSocketCryptoApi : ITiingoWebSocketCryptoApi
     }
 
     /// <inheritdoc/>
-    public Task<ITiingoWebSocketConnection> Connect(int thresholdLevel, CancellationToken cancellationToken)
+    public Task<ITiingoWebSocketConnection> Connect(CryptoThresholdLevel thresholdLevel, CancellationToken cancellationToken)
     {
-        var wsAuth = new WebSocketAuthorization("subscribe", _token, thresholdLevel);
+        var wsAuth = new WebSocketAuthorization("subscribe", _token, (int)thresholdLevel);
         var connFactory = new WebSocketConnectionFactory(wsAuth);
         return connFactory.CreateConnectionAsync(BaseUrl, cancellationToken);
     }

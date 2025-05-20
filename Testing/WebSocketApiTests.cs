@@ -1,6 +1,7 @@
 ﻿using DotTiingo;
 using DotTiingo.Model.WebSocket;
 using DotTiingo.Model.WebSocket.Response;
+using DotTiingo.Api.WebSocket;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -25,7 +26,7 @@ public class WebSocketApiTests
     [Test]
     public async Task Crypto()
     {
-        using var conn = await _client.WebSocket.Crypto.Connect(2, CancellationToken.None);
+        using var conn = await _client.WebSocket.Crypto.Connect(CryptoThresholdLevel.QuoteAndTrade, CancellationToken.None);
 
         var datum = 0;
         var utilities = 0;
@@ -64,7 +65,7 @@ public class WebSocketApiTests
             (now.DayOfWeek == DayOfWeek.Sunday && now.TimeOfDay < TimeSpan.FromHours(22)))
             Assert.Fail("Markets are closed");
 
-        using var conn = await _client.WebSocket.Forex.Connect(2, CancellationToken.None);
+        using var conn = await _client.WebSocket.Forex.Connect(ForexThresholdLevel.TopOfBook, CancellationToken.None);
 
         var datum = 0;
         var utilities = 0;
@@ -107,7 +108,7 @@ public class WebSocketApiTests
             Assert.Fail("Markets are closed");
         }
 
-        using var conn = await _client.WebSocket.Iex.Connect(6, CancellationToken.None);
+        using var conn = await _client.WebSocket.Iex.Connect(IexThresholdLevel.ReferencePrice, CancellationToken.None);
 
         var datum = 0;
         var utilities = 0;
