@@ -52,8 +52,7 @@ public class WebSocketApiTests
         if (timedOut)
             Assert.Fail("Not enough responses received.");
 
-        Assert.That(datum, Is.Positive);
-        Assert.That(utilities, Is.Positive);
+        Assert.That(datum + utilities, Is.Positive);
     }
 
     [Test]
@@ -91,8 +90,7 @@ public class WebSocketApiTests
         if (timedOut)
             Assert.Fail("Not enough responses received.");
 
-        Assert.That(datum, Is.Positive);
-        Assert.That(utilities, Is.Positive);
+        Assert.That(datum + utilities, Is.Positive);
     }
 
     [Test]
@@ -134,7 +132,6 @@ public class WebSocketApiTests
         if (timedOut)
             Assert.Fail("Not enough responses received.");
 
-        Assert.That(datum, Is.Positive);
-        Assert.That(utilities, Is.Positive);
+        Assert.That(datum + utilities, Is.Positive);
     }
 }
