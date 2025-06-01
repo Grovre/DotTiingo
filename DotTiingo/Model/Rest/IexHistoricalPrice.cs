@@ -12,4 +12,4 @@ public record IexHistoricalPrice(
     float High,
     float Low,
     float Close,
-    long Volume);
+    float IexVolume);

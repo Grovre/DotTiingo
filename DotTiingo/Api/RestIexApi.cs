@@ -66,7 +66,7 @@ public class RestIexApi : ITiingoRestIexApi
     /// <inheritdoc/>
     public Task<IexHistoricalPrice[]> GetIexHistoricalPrices(string ticker, DateTimeInterval? interval, string? resampleFreq, bool? afterHours, bool? forceFill)
     {
-        var fullUrl = $"{TiingoApiHelper.RestBaseUrl}/iex/{ticker}/prices";
+        var fullUrl = $"{TiingoApiHelper.RestBaseUrl}/iex/{ticker}/prices?columns=open,high,low,close,volume";
         dynamic content = new ExpandoObject();
         if (interval != null)
         {

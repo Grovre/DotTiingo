@@ -75,11 +75,31 @@ public class RestApiTests
     }
 
     [Test]
-    public async Task IexHistoricalPrices()
+    [TestCase("KOLD")]
+    [TestCase("BOIL")]
+    [TestCase("AAPL")]
+    [TestCase("GOOG")]
+    [TestCase("MSFT")]
+    public async Task IexHistoricalPrices(string ticker)
     {
-        var interval = new DateTimeInterval(DateTime.UtcNow - TimeSpan.FromDays(90), DateTime.UtcNow);
-        var prices = await _client.Rest.Iex.GetIexHistoricalPrices("AAPL", interval, null, null, null);
+        await AssertIexHistoricalPricesValid(ticker);
+    }
+
+    private async Task AssertIexHistoricalPricesValid(string ticker)
+    {
+        var prices = await _client.Rest.Iex.GetIexHistoricalPrices(ticker, null, null, null, null);
         Assert.That(prices, Is.Not.Null);
         Assert.That(prices, Has.Length.Positive);
+        foreach (var price in prices)
+        {
+            Assert.That(price, Is.Not.Null);
+            Assert.That(price.Date, Is.Not.EqualTo(default(DateTime)), "Date should not be default");
+            Assert.That(price.Open, Is.Not.EqualTo(default(float)), "Open price should not be default");
+            Assert.That(price.High, Is.Not.EqualTo(default(float)), "High price should not be default");
+            Assert.That(price.Low, Is.Not.EqualTo(default(float)), "Low price should not be default");
+            Assert.That(price.Close, Is.Not.EqualTo(default(float)), "Close price should not be default");
+            if (price.IexVolume == 0)
+                Assert.Warn($"Volume is zero for {ticker} on {price.Date.ToLocalTime():d} at {price.Date.ToLocalTime():T}. This may indicate no trading activity.");
+        }
     }
 }
