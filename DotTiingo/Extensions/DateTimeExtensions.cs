@@ -11,8 +11,11 @@ namespace DotTiingo.Extensions;
 internal static class DateTimeExtensions
 {
     public static string ToTiingoString(this DateTime dttm) =>
-        dttm.ToString("yyyy-MM-dd");
+        dttm.ToUniversalTime().ToString("yyyy-MM-dd");
+
+    public static string ToTiingoString(this DateTimeOffset dttm) =>
+        dttm.UtcDateTime.ToString("yyyy-MM-dd");
 
     public static (string StartDate, string EndDate) ToTiingoString(this DateTimeInterval dttmInt) =>
-        (dttmInt.Start.ToTiingoString(), dttmInt.End.ToTiingoString());
+        (dttmInt.Start.UtcDateTime.ToTiingoString(), dttmInt.End.UtcDateTime.ToTiingoString());
 }

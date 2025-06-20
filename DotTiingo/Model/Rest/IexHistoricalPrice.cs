@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace DotTiingo.Model.Rest;
 
 public record IexHistoricalPrice(
-    DateTime Date,
+    DateTimeOffset Date,
     float Open,
     float High,
     float Low,

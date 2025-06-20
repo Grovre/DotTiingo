@@ -3,7 +3,7 @@
 namespace DotTiingo.Model.Rest;
 
 public record EndOfDayPrice(
-    DateTime Date,
+    DateTimeOffset Date,
     float Close,
     float High,
     float Low,

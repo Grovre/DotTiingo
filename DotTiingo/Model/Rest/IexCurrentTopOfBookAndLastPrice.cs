@@ -8,9 +8,9 @@ namespace DotTiingo.Model.Rest;
 
 public record IexCurrentTopOfBookAndLastPrice(
     string Ticker,
-    DateTime Timestamp,
-    DateTime? QuoteTimestamp,
-    DateTime? LastSaleTimestamp,
+    DateTimeOffset Timestamp,
+    DateTimeOffset? QuoteTimestamp,
+    DateTimeOffset? LastSaleTimestamp,
     float? Last,
     int? LastSize,
     float TngoLast,

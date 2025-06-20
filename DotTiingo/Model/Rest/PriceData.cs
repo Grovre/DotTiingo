@@ -11,7 +11,7 @@ public record PriceData(
     float High,
     float Low,
     float Close,
-    DateTime Date,
+    DateTimeOffset Date,
     float TradesDone,
     float Volume,
     float VolumeNotional);

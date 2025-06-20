@@ -6,6 +6,6 @@ using System.Threading.Tasks;
 
 namespace DotTiingo.Model.Rest;
 
-public record DateTimeInterval(DateTime Start, DateTime End)
+public record DateTimeInterval(DateTimeOffset Start, DateTimeOffset End)
 {
 }

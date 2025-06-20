@@ -11,8 +11,8 @@ public record NewsArticle(
     string Title,
     string Url,
     string Description,
-    DateTime PublishedDate,
-    DateTime CrawlDate,
+    DateTimeOffset PublishedDate,
+    DateTimeOffset CrawlDate,
     string Source,
     string[] Tickers,
     string[] Tags)

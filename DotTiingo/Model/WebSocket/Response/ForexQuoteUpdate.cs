@@ -9,7 +9,7 @@ namespace DotTiingo.Model.WebSocket.Response;
 public record ForexQuoteUpdate(
     char UpdateMessageType,
     string Ticker,
-    DateTime Date,
+    DateTimeOffset Date,
     float BidSize,
     float BidPrice,
     float MidPrice,

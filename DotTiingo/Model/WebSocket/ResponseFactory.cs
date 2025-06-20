@@ -24,7 +24,7 @@ internal class ResponseFactory
             case 'A': // New data
                 var service = jsonElement.GetProperty("service").GetString()!;
                 string ticker;
-                DateTime dttm;
+                DateTimeOffset dttm;
                 string exchange;
                 char updateMessageType;
                 float bidSize;
@@ -44,7 +44,7 @@ internal class ResponseFactory
                             case 'T':
                                 ticker = jsonElement[1].GetString()!;
                                 NullCheck(ticker, nameof(ticker));
-                                dttm = jsonElement[2].GetDateTime();
+                                dttm = jsonElement[2].GetDateTimeOffset();
                                 exchange = jsonElement[3].GetString()!;
                                 NullCheck(exchange, nameof(exchange));
                                 lastSize = (float)jsonElement[4].GetDouble();
@@ -63,7 +63,7 @@ internal class ResponseFactory
                                 break;
                             case 'Q':
                                 ticker = jsonElement[1].GetString()!;
-                                dttm = jsonElement[2].GetDateTime();
+                                dttm = jsonElement[2].GetDateTimeOffset();
                                 exchange = jsonElement[3].GetString()!;
                                 bidSize = (float)jsonElement[4].GetDouble();
                                 bidPrice = (float)jsonElement[5].GetDouble();
@@ -96,7 +96,7 @@ internal class ResponseFactory
                         switch (arrLen)
                         {
                             case 3:
-                                dttm = jsonElement[0].GetDateTime();
+                                dttm = jsonElement[0].GetDateTimeOffset();
                                 ticker = jsonElement[1].GetString()!;
                                 lastPrice = (float)jsonElement[2].GetDouble(); // Ref price
                                 data = new IexReferencePriceUpdate(
@@ -118,7 +118,7 @@ internal class ResponseFactory
                         jsonElement = jsonElement.GetProperty("data");
                         updateMessageType = jsonElement[0].ToString()![0];
                         ticker = jsonElement[1].GetString()!;
-                        dttm = jsonElement[2].GetDateTime();
+                        dttm = jsonElement[2].GetDateTimeOffset();
                         bidSize = (float)jsonElement[3].GetDouble();
                         bidPrice = (float)jsonElement[4].GetDouble();
                         midPrice = (float)jsonElement[5].GetDouble();

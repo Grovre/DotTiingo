@@ -9,7 +9,7 @@ namespace DotTiingo.Model.WebSocket.Response;
 public record CryptoQuoteUpdate(
     char UpdateMessageType,
     string Ticker,
-    DateTime Date,
+    DateTimeOffset Date,
     string Exchange,
     float BidSize,
     float BidPrice,

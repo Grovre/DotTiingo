@@ -11,5 +11,5 @@ public record EndOfDayMeta(
     string Name,
     string ExchangeCode,
     string Description,
-    DateTime StartDate,
-    DateTime EndDate);
+    DateTimeOffset StartDate,
+    DateTimeOffset EndDate);

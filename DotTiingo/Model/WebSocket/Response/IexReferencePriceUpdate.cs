@@ -7,6 +7,6 @@ using System.Threading.Tasks;
 namespace DotTiingo.Model.WebSocket.Response;
 
 public record IexReferencePriceUpdate(
-    DateTime Date,
+    DateTimeOffset Date,
     string Ticker,
     float ReferencePrice) : IResponseData;

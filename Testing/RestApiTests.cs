@@ -25,7 +25,7 @@ public class RestApiTests
     [Test]
     public async Task EndOfDayPrices()
     {
-        var prices = await _client.Rest.EndOfDay.GetEndOfDayPrices("AAPL", new(DateTime.UtcNow - TimeSpan.FromDays(90), DateTime.UtcNow), "daily", "volume");
+        var prices = await _client.Rest.EndOfDay.GetEndOfDayPrices("AAPL", new(DateTimeOffset.UtcNow - TimeSpan.FromDays(90), DateTimeOffset.UtcNow), "daily", "volume");
         Assert.That(prices, Is.Not.Null);
         Assert.That(prices, Has.Length.Positive);
         Assert.That(prices, Is.EquivalentTo(prices.OrderBy(x => x.Volume)));
@@ -44,7 +44,7 @@ public class RestApiTests
     [Test]
     public async Task News()
     {
-        var news = await _client.Rest.News.GetNews(["AAPL", "NVDA", "INTC"], null, new(DateTime.UtcNow - TimeSpan.FromDays(90), DateTime.UtcNow), 5, null, "publishedDate");
+        var news = await _client.Rest.News.GetNews(["AAPL", "NVDA", "INTC"], null, new(DateTimeOffset.UtcNow - TimeSpan.FromDays(90), DateTimeOffset.UtcNow), 5, null, "publishedDate");
         Assert.That(news, Is.Not.Null);
         Assert.That(news, Has.Length.Positive);
         Assert.That(news, Is.EquivalentTo(news.OrderByDescending(x => x.PublishedDate)));
@@ -53,7 +53,7 @@ public class RestApiTests
     [Test]
     public async Task CryptoPrices()
     {
-        var prices = await _client.Rest.Crypto.GetCryptoPrices(["btcusd"], null, new(DateTime.UtcNow - TimeSpan.FromDays(90), DateTime.UtcNow), null);
+        var prices = await _client.Rest.Crypto.GetCryptoPrices(["btcusd"], null, new(DateTimeOffset.UtcNow - TimeSpan.FromDays(90), DateTimeOffset.UtcNow), null);
         Assert.That(prices, Is.Not.Null);
         Assert.That(prices, Has.Length.Positive);
     }
@@ -93,7 +93,7 @@ public class RestApiTests
         foreach (var price in prices)
         {
             Assert.That(price, Is.Not.Null);
-            Assert.That(price.Date, Is.Not.EqualTo(default(DateTime)), "Date should not be default");
+            Assert.That(price.Date, Is.Not.EqualTo(default(DateTimeOffset)), "Date should not be default");
             Assert.That(price.Open, Is.Not.EqualTo(default(float)), "Open price should not be default");
             Assert.That(price.High, Is.Not.EqualTo(default(float)), "High price should not be default");
             Assert.That(price.Low, Is.Not.EqualTo(default(float)), "Low price should not be default");
