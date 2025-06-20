@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using DotTiingo.Model.Rest;
 using DotTiingo.Extensions;
 
-namespace DotTiingo.Api;
+namespace DotTiingo.Api.Rest;
 
 /// <summary>
 /// Provides access to end-of-day price and meta data endpoints.
@@ -56,9 +56,7 @@ public class RestEndOfDayApi : ITiingoRestEndOfDayApi
         var fullUrl = $"{TiingoApiHelper.RestBaseUrl}/tiingo/daily/{ticker}/prices";
         dynamic content = new ExpandoObject();
         if (interval != null)
-        {
             (content.startDate, content.endDate) = (interval.Start.ToTiingoString(), interval.End.ToTiingoString());
-        }
         if (resampleFreq != null)
             content.resampleFreq = resampleFreq;
         if (sortBy != null)

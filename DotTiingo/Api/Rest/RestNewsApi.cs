@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using DotTiingo.Model.Rest;
 
-namespace DotTiingo.Api;
+namespace DotTiingo.Api.Rest;
 
 /// <summary>
 /// Provides access to news endpoints.

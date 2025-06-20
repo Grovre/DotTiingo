@@ -10,7 +10,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Web;
 
-namespace DotTiingo.Api;
+namespace DotTiingo.Api.Rest;
 
 /// <summary>
 /// Aggregates all Tiingo REST API endpoints.

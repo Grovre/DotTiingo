@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using DotTiingo.Model.Rest;
 using DotTiingo.Extensions;
 
-namespace DotTiingo.Api;
+namespace DotTiingo.Api.Rest;
 
 /// <summary>
 /// Provides access to cryptocurrency price and meta data endpoints.
@@ -58,9 +58,7 @@ public class RestCryptoApi : ITiingoRestCryptoApi
         if (exchanges != null)
             content.exchanges = exchanges;
         if (interval != null)
-        {
             (content.startDate, content.endDate) = interval.ToTiingoString();
-        }
         if (resampleFreq != null)
             content.resampleFreq = resampleFreq;
 

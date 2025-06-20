@@ -5,7 +5,7 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DotTiingo.Api;
+namespace DotTiingo.Api.Rest;
 
 internal class ApiResultFactory<T>(HttpClient httpClient)
 {

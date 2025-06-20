@@ -9,7 +9,7 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DotTiingo.Api;
+namespace DotTiingo.Api.Rest;
 
 /// <summary>
 /// Provides access to IEX price endpoints.
@@ -69,9 +69,7 @@ public class RestIexApi : ITiingoRestIexApi
         var fullUrl = $"{TiingoApiHelper.RestBaseUrl}/iex/{ticker}/prices?columns=open,high,low,close,volume";
         dynamic content = new ExpandoObject();
         if (interval != null)
-        {
             (content.startDate, content.endDate) = (interval.Start.ToTiingoString(), interval.End.ToTiingoString());
-        }
         if (resampleFreq != null)
             content.resampleFreq = resampleFreq;
         if (afterHours != null)

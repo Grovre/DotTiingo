@@ -1,4 +1,4 @@
-﻿using DotTiingo.Api;
+﻿using DotTiingo.Api.Rest;
 using DotTiingo.Api.WebSocket;
 using System;
 using System.Collections.Generic;
