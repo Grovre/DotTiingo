@@ -44,10 +44,10 @@ public class RestApiTests
     [Test]
     public async Task News()
     {
-        var news = await _client.Rest.News.GetNews(["AAPL", "NVDA", "INTC"], null, new(DateTime.UtcNow - TimeSpan.FromDays(90), DateTime.UtcNow), 1, null, "publishedDate");
+        var news = await _client.Rest.News.GetNews(["AAPL", "NVDA", "INTC"], null, new(DateTime.UtcNow - TimeSpan.FromDays(90), DateTime.UtcNow), 5, null, "publishedDate");
         Assert.That(news, Is.Not.Null);
         Assert.That(news, Has.Length.Positive);
-        Assert.That(news, Is.EquivalentTo(news.OrderBy(x => x.PublishedDate)));
+        Assert.That(news, Is.EquivalentTo(news.OrderByDescending(x => x.PublishedDate)));
     }
 
     [Test]
