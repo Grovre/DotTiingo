@@ -12,6 +12,8 @@
     <PackageOutputPath>$(OutputPath)</PackageOutputPath>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <AssemblyVersion></AssemblyVersion>
+    <Version>1.1.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
