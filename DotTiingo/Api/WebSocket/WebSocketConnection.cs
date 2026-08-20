@@ -47,12 +47,24 @@ internal sealed class WebSocketConnection : ITiingoWebSocketConnection
         ReceiveTask = ReceiveLoopAsync(_cancelTokenSource.Token);
     }
 
+    private Exception? _surfacedException = null;
     private async Task ReceiveLoopAsync(CancellationToken cancellationToken)
     {
-        while (!cancellationToken.IsCancellationRequested)
+        try
         {
-            var response = await ReceiveAsync(cancellationToken);
-            OnResponseReceived?.Invoke(this, response);
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var response = await ReceiveAsync(cancellationToken);
+                OnResponseReceived?.Invoke(this, response);
+            }
+        }
+
+        catch (Exception ex)
+        {
+            if (ex is not OperationCanceledException)
+                _surfacedException = ex;
+            
+            await _cancelTokenSource.CancelAsync();
         }
     }
 
@@ -60,7 +72,7 @@ internal sealed class WebSocketConnection : ITiingoWebSocketConnection
     {
         var channel = Channel.CreateUnbounded<AbstractResponse>(new UnboundedChannelOptions
         {
-            SingleWriter = false,
+            SingleWriter = true,
             SingleReader = true
         });
         var cancellationTokens = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _cancelTokenSource.Token);
@@ -74,34 +86,44 @@ internal sealed class WebSocketConnection : ITiingoWebSocketConnection
         cancellationTokens.Token.Register(() =>
         {
             OnResponseReceived -= ReceiveFn;
-            channel.Writer.Complete();
+            if (_surfacedException == null)
+            {
+                channel.Writer.Complete();
+            }
+            else
+            {
+                channel.Writer.Complete(_surfacedException);
+            }
             cancellationTokens.Dispose();
         });
 
         return channel.Reader.ReadAllAsync(cancellationTokens.Token);
     }
 
-    private readonly ArrayBufferWriter<byte> _buffer = new(1024);
-    private readonly ResponseFactory _responseFactory = new();
+    private const int ReceiveChunkSize = 4096;
+    private readonly ArrayBufferWriter<byte> _buffer = new(ReceiveChunkSize);
     private async Task<AbstractResponse> ReceiveAsync(CancellationToken cancellationToken)
     {
         _buffer.ResetWrittenCount();
         var endOfMessage = false;
         while (!endOfMessage)
         {
-            // Receive a chunk of data from the WebSocket.
-            var receiveResult = await _clientWebSocket.ReceiveAsync(_buffer.GetMemory(), cancellationToken);
+            // Receive a chunk of data from the WebSocket. The size hint matters: without it
+            // GetMemory only guarantees a single byte, so a fragmented message would be
+            // received through an ever-shrinking window as the buffer fills.
+            var receiveResult = await _clientWebSocket.ReceiveAsync(
+                _buffer.GetMemory(ReceiveChunkSize), cancellationToken);
             _buffer.Advance(receiveResult.Count);
             endOfMessage = receiveResult.EndOfMessage;
         }
 
-        var json = Encoding.UTF8.GetString(_buffer.WrittenSpan);
-        var response = _responseFactory.CreateResponseFromJson(json)
-            ?? throw new NullReferenceException(
-                "WebSocket response was deserialized as null");
-        if (response.MessageType == 'E')
+        var response = ResponseFactory.CreateResponseFromJson(_buffer.WrittenSpan);
+        // Tiingo reports its own failures as an 'E' frame. Surface the code, the message and
+        // the raw frame together, since that is all the caller has to diagnose with.
+        if (response is UtilityResponse { MessageType: 'E' } error)
             throw new InvalidOperationException(
-                $"WebSocket error:\n{json}");
+                $"WebSocket error {error.ResponseCode}: {error.ResponseMessage}\n"
+                + Encoding.UTF8.GetString(_buffer.WrittenSpan));
 
         return response;
     }

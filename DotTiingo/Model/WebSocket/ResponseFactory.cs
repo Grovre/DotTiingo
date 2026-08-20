@@ -1,186 +1,405 @@
-﻿using DotTiingo.Model.WebSocket.Response;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
+using DotTiingo.Model.WebSocket.Response;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace DotTiingo.Model.WebSocket;
 
-internal class ResponseFactory
+internal static class ResponseFactory
 {
-    public AbstractResponse CreateResponseFromJson(string json)
+    private const string ServiceCryptoData = "crypto_data";
+    private const string ServiceIex = "iex";
+    private const string ServiceFx = "fx";
+
+    private enum ServiceKind
     {
-        using var document = JsonDocument.Parse(json);
-        var jsonElement = document.RootElement;
-        var messageType = jsonElement.GetProperty("messageType").GetString()![0];
-        AbstractResponse response;
-        IResponseData data;
+        None,
+        CryptoData,
+        Iex,
+        Fx,
+        Unsupported
+    }
+
+    public static AbstractResponse CreateResponseFromJson(ReadOnlySpan<byte> utf8Json)
+    {
+        var reader = new Utf8JsonReader(utf8Json);
+        if (!reader.Read() || reader.TokenType != JsonTokenType.StartObject)
+        {
+            throw new JsonException("Expected StartObject");
+        }
+
+        var messageType = '\0';
+        string? service = null;
+        var serviceKind = ServiceKind.None;
+        int? responseCode = null;
+        string? responseMessage = null;
+        int? subscriptionId = null;
+        Utf8JsonReader dataArrayReader = default;
+        var hasDataArray = false;
+
+        while (reader.Read())
+        {
+            if (reader.TokenType == JsonTokenType.EndObject)
+                break;
+
+            if (reader.TokenType != JsonTokenType.PropertyName)
+                continue;
+
+            if (reader.ValueTextEquals("messageType"u8))
+            {
+                messageType = ReadSingleChar(ref reader, "messageType");
+            }
+            else if (reader.ValueTextEquals("service"u8))
+            {
+                ReadNext(ref reader);
+                // ValueTextEquals throws on anything that is not a string or a property
+                // name, so the token type has to be checked before the comparisons below.
+                if (reader.TokenType != JsonTokenType.String)
+                    throw new JsonException(
+                        $"Expected 'service' to be a string but found {reader.TokenType}.");
+
+                if (reader.ValueTextEquals("crypto_data"u8))
+                {
+                    service = ServiceCryptoData;
+                    serviceKind = ServiceKind.CryptoData;
+                }
+                else if (reader.ValueTextEquals("iex"u8))
+                {
+                    service = ServiceIex;
+                    serviceKind = ServiceKind.Iex;
+                }
+                else if (reader.ValueTextEquals("fx"u8))
+                {
+                    service = ServiceFx;
+                    serviceKind = ServiceKind.Fx;
+                }
+                else
+                {
+                    // Only unrecognized services pay for a string allocation, and only so
+                    // that the name can be reported in the exception below.
+                    service = reader.GetString();
+                    serviceKind = ServiceKind.Unsupported;
+                }
+            }
+            else if (reader.ValueTextEquals("response"u8))
+            {
+                ReadNext(ref reader);
+                if (reader.TokenType != JsonTokenType.StartObject)
+                    throw new JsonException(
+                        $"Expected 'response' to be an object but found {reader.TokenType}.");
+
+                while (true)
+                {
+                    ReadNext(ref reader);
+                    if (reader.TokenType == JsonTokenType.EndObject)
+                        break;
+                    if (reader.TokenType != JsonTokenType.PropertyName)
+                        continue;
+
+                    if (reader.ValueTextEquals("code"u8))
+                    {
+                        ReadNext(ref reader);
+                        if (reader.TokenType != JsonTokenType.Number)
+                            throw new JsonException(
+                                $"Expected 'response.code' to be a number but found {reader.TokenType}.");
+                        responseCode = reader.GetInt32();
+                    }
+                    else if (reader.ValueTextEquals("message"u8))
+                    {
+                        responseMessage = ReadString(ref reader, "response.message");
+                    }
+                    else
+                    {
+                        ReadNext(ref reader);
+                        reader.Skip();
+                    }
+                }
+            }
+            else if (reader.ValueTextEquals("data"u8))
+            {
+                ReadNext(ref reader);
+                if (reader.TokenType == JsonTokenType.StartObject)
+                {
+                    while (true)
+                    {
+                        ReadNext(ref reader);
+                        if (reader.TokenType == JsonTokenType.EndObject)
+                            break;
+                        if (reader.TokenType != JsonTokenType.PropertyName)
+                            continue;
+
+                        if (reader.ValueTextEquals("subscriptionId"u8))
+                        {
+                            ReadNext(ref reader);
+                            if (reader.TokenType != JsonTokenType.Number)
+                                throw new JsonException(
+                                    $"Expected 'data.subscriptionId' to be a number but found {reader.TokenType}.");
+                            subscriptionId = reader.GetInt32();
+                        }
+                        else
+                        {
+                            ReadNext(ref reader);
+                            reader.Skip();
+                        }
+                    }
+                }
+                else if (reader.TokenType == JsonTokenType.StartArray)
+                {
+                    // Utf8JsonReader is a struct, so this snapshot is a cheap copy that can
+                    // be replayed later. Parsing here instead would mean guessing the payload
+                    // shape whenever 'data' precedes 'service' in the frame, and guessing
+                    // wrong yields a plausible-looking update built from the wrong fields.
+                    dataArrayReader = reader;
+                    hasDataArray = true;
+                    reader.Skip();
+                }
+            }
+            else
+            {
+                ReadNext(ref reader);
+                reader.Skip();
+            }
+        }
 
         switch (messageType)
         {
             case 'A': // New data
-                var service = jsonElement.GetProperty("service").GetString()!;
-                string ticker;
-                DateTimeOffset dttm;
-                string exchange;
-                char updateMessageType;
-                float bidSize;
-                float bidPrice;
-                float midPrice;
-                float askSize;
-                float askPrice;
-                float lastSize;
-                float lastPrice;
-                switch (service)
-                {
-                    case "crypto_data":
-                        jsonElement = jsonElement.GetProperty("data");
-                        updateMessageType = jsonElement[0].GetString()![0];
-                        switch (updateMessageType)
-                        {
-                            case 'T':
-                                ticker = jsonElement[1].GetString()!;
-                                NullCheck(ticker, nameof(ticker));
-                                dttm = jsonElement[2].GetDateTimeOffset();
-                                exchange = jsonElement[3].GetString()!;
-                                NullCheck(exchange, nameof(exchange));
-                                lastSize = (float)jsonElement[4].GetDouble();
-                                lastPrice = (float)jsonElement[5].GetDouble();
-                                data = new CryptoTradeUpdate(
-                                    updateMessageType,
-                                    ticker,
-                                    dttm,
-                                    exchange,
-                                    lastSize,
-                                    lastPrice);
-                                response = new DataResponse(
-                                    messageType,
-                                    service,
-                                    data);
-                                break;
-                            case 'Q':
-                                ticker = jsonElement[1].GetString()!;
-                                dttm = jsonElement[2].GetDateTimeOffset();
-                                exchange = jsonElement[3].GetString()!;
-                                bidSize = (float)jsonElement[4].GetDouble();
-                                bidPrice = (float)jsonElement[5].GetDouble();
-                                midPrice = (float)jsonElement[6].GetDouble();
-                                askSize = (float)jsonElement[7].GetDouble();
-                                askPrice = (float)jsonElement[8].GetDouble();
-                                data = new CryptoQuoteUpdate(
-                                    updateMessageType,
-                                    ticker,
-                                    dttm,
-                                    exchange,
-                                    bidSize,
-                                    bidPrice,
-                                    midPrice,
-                                    askSize,
-                                    askPrice);
-                                response = new DataResponse(
-                                    messageType, 
-                                    service, 
-                                    data);
-                                break;
-                            default:
-                                throw new NotSupportedException(
-                                    $"Data message type '{updateMessageType}' not supported.");
-                        }
-                        break;
-                    case "iex":
-                        jsonElement = jsonElement.GetProperty("data");
-                        var arrLen = jsonElement.GetArrayLength();
-                        switch (arrLen)
-                        {
-                            case 3:
-                                dttm = jsonElement[0].GetDateTimeOffset();
-                                ticker = jsonElement[1].GetString()!;
-                                lastPrice = (float)jsonElement[2].GetDouble(); // Ref price
-                                data = new IexReferencePriceUpdate(
-                                    dttm,
-                                    ticker,
-                                    lastPrice);
-                                response = new DataResponse(
-                                    messageType,
-                                    service,
-                                    data);
-                                break;
-                            case 16:
-                            default:
-                                throw new NotSupportedException(
-                                    $"IEX message with array length '{arrLen}' not supported.");
-                        }
-                        break;
-                    case "fx":
-                        jsonElement = jsonElement.GetProperty("data");
-                        updateMessageType = jsonElement[0].ToString()![0];
-                        ticker = jsonElement[1].GetString()!;
-                        dttm = jsonElement[2].GetDateTimeOffset();
-                        bidSize = (float)jsonElement[3].GetDouble();
-                        bidPrice = (float)jsonElement[4].GetDouble();
-                        midPrice = (float)jsonElement[5].GetDouble();
-                        askSize = (float)jsonElement[6].GetDouble();
-                        askPrice = (float)jsonElement[7].GetDouble();
-                        data = new ForexQuoteUpdate(
-                            updateMessageType,
-                            ticker,
-                            dttm,
-                            bidSize,
-                            bidPrice,
-                            midPrice,
-                            askSize,
-                            askPrice);
-                        response = new DataResponse(
-                            messageType,
-                            service,
-                            data);
-                        break;
-                    default:
-                        throw new NotSupportedException(
-                            $"Service '{service}' not supported.");
-                }
-                break;
-            case 'U': // Updating existing data
-                goto default;
-            case 'D': // Deleting existing data
-                goto default;
+                if (!hasDataArray)
+                    throw new JsonException("Data response was missing its 'data' array.");
+                if (service == null)
+                    throw new JsonException("Data response was missing its 'service'.");
+                return new DataResponse(
+                    messageType,
+                    service,
+                    ParseDataArray(ref dataArrayReader, serviceKind, service));
+
             case 'I': // Informational/meta data
-                var responseElement = jsonElement.GetProperty("response");
-                var responseCode = responseElement.GetProperty("code").GetInt32();
-                var responseMessage = responseElement.GetProperty("message").GetString()!;
-                var subId = jsonElement.GetProperty("data").GetProperty("subscriptionId").GetInt32();
-                response = new UtilityResponse(
-                    messageType,
-                    responseCode,
-                    responseMessage,
-                    subId);
-                break;
-            case 'E': // Error messages
-                goto default;
             case 'H': // Heartbeats
-                responseElement = jsonElement.GetProperty("response");
-                responseCode = responseElement.GetProperty("code").GetInt32();
-                responseMessage = responseElement.GetProperty("message").GetString()!;
-                response = new UtilityResponse(
+                return new UtilityResponse(
                     messageType,
-                    responseCode,
-                    responseMessage,
-                    null);
-                break;
+                    responseCode ?? throw new JsonException(
+                        $"Utility response '{messageType}' was missing 'response.code'."),
+                    responseMessage ?? throw new JsonException(
+                        $"Utility response '{messageType}' was missing 'response.message'."),
+                    messageType == 'I' ? subscriptionId : null);
+
+            case 'E': // Error messages
+                // Deliberately lenient: the caller turns this into an exception carrying the
+                // raw frame, so a malformed error frame must not be masked by a schema error
+                // that discards whatever diagnostic Tiingo did manage to send.
+                return new UtilityResponse(
+                    messageType,
+                    responseCode ?? 0,
+                    responseMessage ?? string.Empty,
+                    subscriptionId);
+
+            // 'U' (update) and 'D' (delete) are part of Tiingo's documented message set but
+            // are not emitted by any service this library supports, so they land here with
+            // everything else that is unrecognized.
             default:
                 throw new NotSupportedException(
                     $"Message type '{messageType}' not supported.");
         }
-
-        return response;
     }
 
-    private static void NullCheck(object? o, string name)
+    /// <summary>
+    /// Parses a 'data' array. The reader must be positioned at its StartArray token.
+    /// Elements past the ones a shape needs are ignored, so an appended field does not
+    /// break the shapes that already work.
+    /// </summary>
+    private static IResponseData ParseDataArray(
+        ref Utf8JsonReader reader,
+        ServiceKind serviceKind,
+        string service)
     {
-        if (o == null)
-            throw new NullReferenceException($"Deserialized json variable '{name}' was null");
+        switch (serviceKind)
+        {
+            case ServiceKind.CryptoData:
+                return ParseCryptoDataArray(ref reader);
+            case ServiceKind.Iex:
+                return ParseIexDataArray(ref reader);
+            case ServiceKind.Fx:
+                return ParseFxDataArray(ref reader);
+            default:
+                throw new NotSupportedException(
+                    $"Service '{service}' not supported.");
+        }
+    }
+
+    private static IResponseData ParseCryptoDataArray(ref Utf8JsonReader reader)
+    {
+        var updateMessageType = ReadSingleChar(ref reader, "data[0]");
+        switch (updateMessageType)
+        {
+            case 'T':
+            {
+                var ticker = ReadString(ref reader, "ticker");
+                var dttm = ReadDateTimeOffset(ref reader, "dttm");
+                var exchange = ReadString(ref reader, "exchange");
+                var lastSize = ReadSingle(ref reader, "lastSize");
+                var lastPrice = ReadSingle(ref reader, "lastPrice");
+                return new CryptoTradeUpdate(
+                    updateMessageType,
+                    ticker,
+                    dttm,
+                    exchange,
+                    lastSize,
+                    lastPrice);
+            }
+            case 'Q':
+            {
+                var ticker = ReadString(ref reader, "ticker");
+                var dttm = ReadDateTimeOffset(ref reader, "dttm");
+                var exchange = ReadString(ref reader, "exchange");
+                var bidSize = ReadSingle(ref reader, "bidSize");
+                var bidPrice = ReadSingle(ref reader, "bidPrice");
+                var midPrice = ReadSingle(ref reader, "midPrice");
+                var askSize = ReadSingle(ref reader, "askSize");
+                var askPrice = ReadSingle(ref reader, "askPrice");
+                return new CryptoQuoteUpdate(
+                    updateMessageType,
+                    ticker,
+                    dttm,
+                    exchange,
+                    bidSize,
+                    bidPrice,
+                    midPrice,
+                    askSize,
+                    askPrice);
+            }
+            default:
+                throw new NotSupportedException(
+                    $"Data message type '{updateMessageType}' not supported.");
+        }
+    }
+
+    private static IResponseData ParseIexDataArray(ref Utf8JsonReader reader)
+    {
+        // Kept so the array length can be reported if the shape is not recognized.
+        var arrayStart = reader;
+
+        // The only supported IEX shape is the 3-element reference price update:
+        // [timestamp, ticker, referencePrice]. Every other shape is reported by its length,
+        // so this probe tests token types rather than letting a field-level failure escape
+        // and mask the length.
+        if (reader.Read()
+            && reader.TokenType == JsonTokenType.String
+            && reader.TryGetDateTimeOffset(out var dttm)
+            && reader.Read()
+            && reader.TokenType == JsonTokenType.String)
+        {
+            var ticker = reader.GetString()!;
+            if (reader.Read() && reader.TokenType == JsonTokenType.Number)
+            {
+                var referencePrice = reader.GetSingle();
+                if (reader.Read() && reader.TokenType == JsonTokenType.EndArray)
+                    return new IexReferencePriceUpdate(dttm, ticker, referencePrice);
+            }
+        }
+
+        throw new NotSupportedException(
+            $"IEX message with array length '{CountArrayElements(ref arrayStart)}' not supported.");
+    }
+
+    private static IResponseData ParseFxDataArray(ref Utf8JsonReader reader)
+    {
+        var updateMessageType = ReadSingleChar(ref reader, "data[0]");
+        var ticker = ReadString(ref reader, "ticker");
+        var dttm = ReadDateTimeOffset(ref reader, "dttm");
+        var bidSize = ReadSingle(ref reader, "bidSize");
+        var bidPrice = ReadSingle(ref reader, "bidPrice");
+        var midPrice = ReadSingle(ref reader, "midPrice");
+        var askSize = ReadSingle(ref reader, "askSize");
+        var askPrice = ReadSingle(ref reader, "askPrice");
+        return new ForexQuoteUpdate(
+            updateMessageType,
+            ticker,
+            dttm,
+            bidSize,
+            bidPrice,
+            midPrice,
+            askSize,
+            askPrice);
+    }
+
+    /// <summary>
+    /// Counts the elements of the array the reader is positioned at (its StartArray token).
+    /// </summary>
+    private static int CountArrayElements(ref Utf8JsonReader reader)
+    {
+        var count = 0;
+        while (true)
+        {
+            ReadNext(ref reader);
+            if (reader.TokenType == JsonTokenType.EndArray)
+                return count;
+            if (reader.TokenType is JsonTokenType.StartObject or JsonTokenType.StartArray)
+                reader.Skip();
+            count++;
+        }
+    }
+
+    /// <summary>
+    /// Advances the reader, failing loudly rather than leaving a caller to spin on an
+    /// unchanged token.
+    /// </summary>
+    private static void ReadNext(ref Utf8JsonReader reader)
+    {
+        if (!reader.Read())
+            throw new JsonException("Unexpected end of JSON payload.");
+    }
+
+    private static char ReadSingleChar(ref Utf8JsonReader reader, string name)
+    {
+        ReadNext(ref reader);
+        if (reader.TokenType != JsonTokenType.String)
+            throw new JsonException(
+                $"Expected '{name}' to be a string but found {reader.TokenType}.");
+
+        // Fast path: an unescaped single ASCII byte, which is what Tiingo sends.
+        if (!reader.ValueIsEscaped)
+        {
+            var span = reader.ValueSpan;
+            if (span.Length == 1 && span[0] <= 0x7F)
+                return (char)span[0];
+        }
+
+        // Slow path. ValueSpan is the raw JSON slice, neither unescaped nor decoded, so a
+        // JSON escape sequence or a multi-byte character has to go through GetString.
+        var value = reader.GetString();
+        if (value is not { Length: 1 })
+            throw new JsonException($"Expected '{name}' to be a single-character string.");
+        return value[0];
+    }
+
+    private static string ReadString(ref Utf8JsonReader reader, string name)
+    {
+        ReadNext(ref reader);
+        return reader.TokenType switch
+        {
+            JsonTokenType.String => reader.GetString()!,
+            JsonTokenType.Null => throw new NullReferenceException(
+                $"Deserialized json variable '{name}' was null"),
+            _ => throw new JsonException(
+                $"Expected '{name}' to be a string but found {reader.TokenType}.")
+        };
+    }
+
+    private static float ReadSingle(ref Utf8JsonReader reader, string name)
+    {
+        ReadNext(ref reader);
+        if (reader.TokenType != JsonTokenType.Number)
+            throw new JsonException(
+                $"Expected '{name}' to be a number but found {reader.TokenType}.");
+        return reader.GetSingle();
+    }
+
+    private static DateTimeOffset ReadDateTimeOffset(ref Utf8JsonReader reader, string name)
+    {
+        ReadNext(ref reader);
+        if (reader.TokenType != JsonTokenType.String)
+            throw new JsonException(
+                $"Expected '{name}' to be a date string but found {reader.TokenType}.");
+        if (!reader.TryGetDateTimeOffset(out var value))
+            throw new JsonException($"Could not parse '{name}' as a date.");
+        return value;
     }
 }
