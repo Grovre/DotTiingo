@@ -56,6 +56,32 @@ public class WebSocketApiTests
     }
 
     [Test]
+    public async Task CryptoReceiveEnumerable()
+    {
+        using var conn = await _client.WebSocket.Crypto.Connect(CryptoThresholdLevel.QuoteAndTrade, CancellationToken.None);
+
+        var count = 0;
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+
+        try
+        {
+            await foreach (var response in conn.ReceiveEnumerableAsync(cts.Token))
+            {
+                count++;
+                if (count >= 10)
+                {
+                    break;
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+
+        Assert.That(count, Is.Positive);
+    }
+
+    [Test]
     public async Task Forex()
     {
         var now = DateTime.UtcNow;

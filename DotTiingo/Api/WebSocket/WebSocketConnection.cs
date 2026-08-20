@@ -5,9 +5,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.WebSockets;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace DotTiingo.Api.WebSocket;
@@ -21,6 +23,13 @@ public interface ITiingoWebSocketConnection : IDisposable
     /// Occurs when a response is received from the WebSocket connection.
     /// </summary>
     public event EventHandler<AbstractResponse>? OnResponseReceived;
+
+    /// <summary>
+    /// Receives responses from the WebSocket connection as an asynchronous stream.
+    /// </summary>
+    /// <param name="cancellationToken">A cancellation token that can be used to cancel the asynchronous stream.</param>
+    /// <returns>An <see cref="IAsyncEnumerable{AbstractResponse}"/> of responses received from the WebSocket connection.</returns>
+    public IAsyncEnumerable<AbstractResponse> ReceiveEnumerableAsync(CancellationToken cancellationToken = default);
 }
 
 internal sealed class WebSocketConnection : ITiingoWebSocketConnection
@@ -44,6 +53,31 @@ internal sealed class WebSocketConnection : ITiingoWebSocketConnection
             var response = await ReceiveAsync(cancellationToken);
             OnResponseReceived?.Invoke(this, response);
         }
+    }
+
+    public IAsyncEnumerable<AbstractResponse> ReceiveEnumerableAsync(CancellationToken cancellationToken = default)
+    {
+        var channel = Channel.CreateUnbounded<AbstractResponse>(new UnboundedChannelOptions
+        {
+            SingleWriter = false,
+            SingleReader = true
+        });
+        var cancellationTokens = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _cancelTokenSource.Token);
+
+        void ReceiveFn(object? sender, AbstractResponse response)
+        {
+            channel.Writer.TryWrite(response);
+        }
+
+        OnResponseReceived += ReceiveFn;
+        cancellationTokens.Token.Register(() =>
+        {
+            OnResponseReceived -= ReceiveFn;
+            channel.Writer.Complete();
+            cancellationTokens.Dispose();
+        });
+
+        return channel.Reader.ReadAllAsync(cancellationTokens.Token);
     }
 
     private readonly byte[] _buffer = new byte[1024];
