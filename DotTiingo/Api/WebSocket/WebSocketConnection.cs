@@ -1,17 +1,9 @@
 ﻿using DotTiingo.Model.WebSocket;
 using DotTiingo.Model.WebSocket.Response;
-using System;
 using System.Buffers;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Net.WebSockets;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Channels;
-using System.Threading.Tasks;
 
 namespace DotTiingo.Api.WebSocket;
 
@@ -35,19 +27,22 @@ public interface ITiingoWebSocketConnection : IDisposable
 
 internal sealed class WebSocketConnection : ITiingoWebSocketConnection
 {
-    private readonly ClientWebSocket _clientWebSocket;
+    private readonly System.Net.WebSockets.WebSocket _clientWebSocket;
     private readonly CancellationTokenSource _cancelTokenSource;
     public Task ReceiveTask { get; private set; }
     public event EventHandler<AbstractResponse>? OnResponseReceived;
 
-    public WebSocketConnection(ClientWebSocket clientWebSocket, CancellationToken cancellationToken)
+    internal Exception? SurfacedException => _surfacedException;
+    internal CancellationToken CancellationToken => _cancelTokenSource.Token;
+
+    public WebSocketConnection(System.Net.WebSockets.WebSocket clientWebSocket, CancellationToken cancellationToken)
     {
         _clientWebSocket = clientWebSocket;
         _cancelTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         ReceiveTask = ReceiveLoopAsync(_cancelTokenSource.Token);
     }
 
-    private Exception? _surfacedException = null;
+    private Exception? _surfacedException;
     private async Task ReceiveLoopAsync(CancellationToken cancellationToken)
     {
         try
@@ -68,7 +63,7 @@ internal sealed class WebSocketConnection : ITiingoWebSocketConnection
         }
     }
 
-    public IAsyncEnumerable<AbstractResponse> ReceiveEnumerableAsync(CancellationToken cancellationToken = default)
+    public async IAsyncEnumerable<AbstractResponse> ReceiveEnumerableAsync([System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var channel = Channel.CreateUnbounded<AbstractResponse>(new UnboundedChannelOptions
         {
@@ -83,7 +78,7 @@ internal sealed class WebSocketConnection : ITiingoWebSocketConnection
         }
 
         OnResponseReceived += ReceiveFn;
-        cancellationTokens.Token.Register(() =>
+        using var registration = cancellationTokens.Token.Register(() =>
         {
             OnResponseReceived -= ReceiveFn;
             if (_surfacedException == null)
@@ -94,10 +89,20 @@ internal sealed class WebSocketConnection : ITiingoWebSocketConnection
             {
                 channel.Writer.Complete(_surfacedException);
             }
-            cancellationTokens.Dispose();
         });
 
-        return channel.Reader.ReadAllAsync(cancellationTokens.Token);
+        try
+        {
+            await foreach (var response in channel.Reader.ReadAllAsync(cancellationToken))
+            {
+                yield return response;
+            }
+        }
+        finally
+        {
+            OnResponseReceived -= ReceiveFn;
+            cancellationTokens.Dispose();
+        }
     }
 
     private const int ReceiveChunkSize = 4096;
@@ -113,6 +118,12 @@ internal sealed class WebSocketConnection : ITiingoWebSocketConnection
             // received through an ever-shrinking window as the buffer fills.
             var receiveResult = await _clientWebSocket.ReceiveAsync(
                 _buffer.GetMemory(ReceiveChunkSize), cancellationToken);
+
+            if (receiveResult.MessageType == WebSocketMessageType.Close)
+            {
+                throw new WebSocketException(WebSocketError.ConnectionClosedPrematurely, "WebSocket connection was closed by the remote endpoint.");
+            }
+
             _buffer.Advance(receiveResult.Count);
             endOfMessage = receiveResult.EndOfMessage;
         }
@@ -128,7 +139,7 @@ internal sealed class WebSocketConnection : ITiingoWebSocketConnection
         return response;
     }
 
-    private bool _disposed = false;
+    private bool _disposed;
     public void Dispose()
     {
         if (_disposed)
@@ -137,6 +148,7 @@ internal sealed class WebSocketConnection : ITiingoWebSocketConnection
         _cancelTokenSource.Cancel();
         _cancelTokenSource.Dispose();
         _clientWebSocket.Dispose();
+        // ReSharper disable once GCSuppressFinalizeForTypeWithoutDestructor
         GC.SuppressFinalize(this);
 
         _disposed = true;
