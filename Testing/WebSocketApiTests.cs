@@ -15,6 +15,8 @@ namespace Testing;
 public class WebSocketApiTests
 {
     private TiingoClient _client = null!;
+    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(60);
+    private const int ExpectedMessages = 1000;
 
     [OneTimeSetUp]
     public void Setup()
@@ -40,15 +42,13 @@ public class WebSocketApiTests
                 datum++;
             else
             {
-                conn.Dispose();
                 Assert.Fail($"Unknown response type: {response.GetType()}. Message type: {response.MessageType}");
             }
         };
 
         var timedOut = !SpinWait.SpinUntil(
-            () => datum + utilities > 100, TimeSpan.FromSeconds(10));
+            () => datum + utilities > ExpectedMessages, Timeout);
 
-        conn.Dispose();
         if (timedOut)
             Assert.Fail("Not enough responses received.");
 
@@ -61,14 +61,14 @@ public class WebSocketApiTests
         using var conn = await _client.WebSocket.Crypto.Connect(CryptoThresholdLevel.QuoteAndTrade, CancellationToken.None);
 
         var count = 0;
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        using var cts = new CancellationTokenSource(Timeout);
 
         try
         {
             await foreach (var response in conn.ReceiveEnumerableAsync(cts.Token))
             {
                 count++;
-                if (count >= 10)
+                if (count >= ExpectedMessages)
                 {
                     break;
                 }
@@ -104,15 +104,13 @@ public class WebSocketApiTests
                 datum++;
             else
             {
-                conn.Dispose();
                 Assert.Fail($"Unknown response type: {response.GetType()}. Message type: {response.MessageType}");
             }
         };
 
         var timedOut = !SpinWait.SpinUntil(
-            () => datum + utilities > 100, TimeSpan.FromSeconds(10));
+            () => datum + utilities > ExpectedMessages, Timeout);
 
-        conn.Dispose();
         if (timedOut)
             Assert.Fail("Not enough responses received.");
 
@@ -146,15 +144,13 @@ public class WebSocketApiTests
                 datum++;
             else
             {
-                conn.Dispose();
                 Assert.Fail($"Unknown response type: {response.GetType()}. Message type: {response.MessageType}");
             }
         };
 
         var timedOut = !SpinWait.SpinUntil(
-            () => datum + utilities > 100, TimeSpan.FromSeconds(10));
+            () => datum + utilities > ExpectedMessages, Timeout);
 
-        conn.Dispose();
         if (timedOut)
             Assert.Fail("Not enough responses received.");
 
