@@ -1,8 +1,7 @@
 // This example demonstrates using the DotTiingo library to connect to the Tiingo Crypto WebSocket stream
-// (TiingoClient.WebSocket.Crypto) and plot the last 100 BTC/USD trade prices in real time in the console.
+// (TiingoClient.WebSocket.Crypto) and plot the last 100 BTC trade prices from USD/USDT/USDC in real time in the console.
 
 using ConsolePlot;
-using ConsolePlot.Plotting;
 using DotTiingo;
 using DotTiingo.Api.WebSocket;
 using DotTiingo.Model.WebSocket.Response;
@@ -18,71 +17,37 @@ var cfg = new ConfigurationBuilder()
 var tiingoToken = cfg["tiingo_token"]
     ?? throw new Exception("Tiingo token not found in configuration.");
 
+Console.OutputEncoding = Encoding.UTF8;
+
 using var httpClient = new HttpClient();
 var client = new TiingoClient(httpClient, tiingoToken);
+const int maxTrades = 100;
+var priceQueue = new Queue<double>(capacity: maxTrades);
 
 // Connect to the Tiingo crypto trade WebSocket stream
 using var conn = await client.WebSocket.Crypto.Connect(CryptoThresholdLevel.Trade, CancellationToken.None);
-
-const int maxTrades = 100;
-var prices = new Queue<double>(maxTrades);
-var @lock = new Lock();
-CryptoTradeUpdate? latestTrade = null;
-
-// Listen for incoming trade updates and keep the last 100 BTC/USD prices
-conn.OnResponseReceived += (_, r) =>
+// Can be recreated using the EventHandler<> also in conn
+await foreach (var response in conn.ReceiveEnumerableAsync(CancellationToken.None))
 {
-    if (r is not DataResponse { Data: CryptoTradeUpdate ctu })
-        return;
+    if (response is not DataResponse { Data: CryptoTradeUpdate ctu })
+        continue;
 
-    if (!ctu.Ticker.Equals("btcusdt", StringComparison.OrdinalIgnoreCase))
-        return;
+    if (ctu.Ticker is not "btcusdt" and not "btcusdc" and not "btcusd")
+        continue;
+    
+    priceQueue.Enqueue(ctu.LastPrice);
+    while (priceQueue.Count > maxTrades)
+        priceQueue.Dequeue();
+    
 
-    lock (@lock)
-    {
-        if (prices.Count >= maxTrades)
-            prices.Dequeue();
+    var plot = new Plot(Console.WindowWidth, Console.WindowHeight - 3);
+    plot.Ticks.Labels.Format = "N2";
+    double[] pricePoints = [.. priceQueue.Concat(Enumerable.Repeat((double)ctu.LastPrice, maxTrades - priceQueue.Count))];
+    double[] columns = [.. Enumerable.Range(1, pricePoints.Length).Select(i => (double)i)];
+    plot.AddSeries(columns, pricePoints);
+    plot.Draw();
 
-        prices.Enqueue(ctu.LastPrice);
-        latestTrade = ctu;
-    }
-};
-
-Console.OutputEncoding = Encoding.UTF8;
-Console.WriteLine("Connected to Tiingo Crypto WebSocket. Waiting for BTC/USD trades...");
-
-// Periodically redraw the price chart of the last 100 trades
-await Task.Run(() =>
-{
-    while (true)
-    {
-        Thread.Sleep(1000);
-
-        double[] currentPrices;
-        CryptoTradeUpdate? currentTrade;
-
-        lock (@lock)
-        {
-            if (prices.Count == 0)
-                continue;
-
-            currentPrices = prices.ToArray();
-            currentTrade = latestTrade;
-        }
-
-        double[] xs = Enumerable.Range(1, currentPrices.Length).Select(i => (double)i).ToArray();
-
-        var plot = new Plot(Console.WindowWidth, Console.WindowHeight - 1);
-        plot.Ticks.Labels.Format = "N2";
-        plot.AddSeries(xs, currentPrices);
-        plot.Draw();
-
-        Console.Clear();
-        if (currentTrade != null)
-        {
-            Console.Clear();
-            Console.WriteLine($"[BTC/USD] Last Price: ${currentTrade.LastPrice:N2} | Size: {currentTrade.LastSize:N4} | Exchange: {currentTrade.Exchange} | Points: {currentPrices.Length}/{maxTrades}");
-        }
-        plot.Render();
-    }
-});
+    Console.Clear();
+    Console.WriteLine($"[{ctu.Ticker}] Last Price: ${ctu.LastPrice:N2} | Size: {ctu.LastSize:N4} | Exchange: {ctu.Exchange} | Points: {priceQueue.Count}/{maxTrades}");
+    plot.Render();
+}
