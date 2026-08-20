@@ -1,7 +1,7 @@
 ﻿# DotTiingo
 
-[![NuGet](https://p.kagi.com/proxy/DotTiingo?c=EgGQfWtq44GRXgvj3b8hBQca8C6V8JrLZ9QFJhO2p-efhlYjUEdviiVff_NXzENQ33u3eodgeKyA79512W2vzA%3D%3D)](https://www.nuget.org/packages/DotTiingo)
-[![NuGet Downloads](https://p.kagi.com/proxy/DotTiingo?c=EgGQfWtq44GRXgvj3b8hBcjIi3MiQeTQYOKhv2rB3ymgNCymbWXzkYWJqOvhDVbX1k4rJeoWSBBvI_rhx5O2Gg%3D%3D)](https://www.nuget.org/packages/DotTiingo)
+[![NuGet](https://img.shields.io/nuget/v/DotTiingo)](https://www.nuget.org/packages/DotTiingo)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/DotTiingo)](https://www.nuget.org/packages/DotTiingo)
 
 A simple .NET library for accessing the [Tiingo](https://www.tiingo.com) financial data API.
 
