@@ -61,6 +61,19 @@ var quotes = await client.Rest.Iex.GetIexCurrentTopOfBookAndLastPrice(new[] { &q
 var history = await client.Rest.Iex.GetIexHistoricalPrices(&quot;AAPL&quot;, interval: null, resampleFreq: &quot;1hour&quot;, afterHours: false, forceFill: false);
 ```
 
+### Forex
+
+```csharp
+// Current top-of-book
+var quotes = await client.Rest.Forex.GetCurrentTopOfBook(new[] { &quot;eurusd&quot;, &quot;gbpusd&quot; });
+
+// Current day OHLC
+var current = await client.Rest.Forex.GetCurrentOpenHighLowClose(&quot;eurusd&quot;, resampleFreq: null);
+
+// Historical intraday OHLC prices
+var history = await client.Rest.Forex.GetHistoricalOpenHighLowClose(&quot;eurusd&quot;, resampleFreq: &quot;1hour&quot;, interval: null);
+```
+
 ### Crypto
 
 ```csharp
@@ -127,6 +140,7 @@ await Task.Delay(Timeout.Infinite);
 |-----------------|-----------------------------------------|
 | `Rest.EndOfDay` | End-of-day prices and metadata          |
 | `Rest.Iex`      | Intraday top-of-book and historical IEX |
+| `Rest.Forex`    | Top-of-book and historical/current OHLC |
 | `Rest.Crypto`   | Crypto prices and metadata              |
 | `Rest.News`     | News articles filtered by ticker/source |
 
