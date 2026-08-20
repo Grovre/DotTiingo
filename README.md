@@ -5,7 +5,7 @@
 
 A simple .NET library for accessing the [Tiingo](https://www.tiingo.com) financial data API.
 
-- **Version:** 1.1.0
+- **Version:** 1.2.0
 - **Target Framework:** .NET 10
 - **License:** MIT
 
