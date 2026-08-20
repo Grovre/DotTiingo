@@ -18,21 +18,25 @@ namespace DotTiingo.Api.Rest;
 public interface ITiingoRestApi : IDisposable
 {
     /// <summary>
-    /// Provides access to end-of-day price and meta data endpoints.
+    /// Provides access to end-of-day endpoints.
     /// </summary>
     ITiingoRestEndOfDayApi EndOfDay { get; }
     /// <summary>
-    /// Provides access to IEX price endpoints.
+    /// Provides access to IEX endpoints.
     /// </summary>
     ITiingoRestIexApi Iex { get; }
     /// <summary>
-    /// Provides access to cryptocurrency price and meta data endpoints.
+    /// Provides access to cryptocurrency endpoints.
     /// </summary>
     ITiingoRestCryptoApi Crypto { get; }
     /// <summary>
     /// Provides access to news endpoints.
     /// </summary>
     ITiingoRestNewsApi News { get; }
+    /// <summary>
+    /// Provides access to forex endpoints.
+    /// </summary>
+    ITiingoRestForexApi Forex { get; }
 }
 
 /// <summary>
@@ -49,6 +53,8 @@ public sealed class RestApi : ITiingoRestApi
     public ITiingoRestCryptoApi Crypto { get; }
     /// <inheritdoc/>
     public ITiingoRestNewsApi News { get; }
+    /// <inheritdoc/>
+    public ITiingoRestForexApi Forex { get; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="RestApi"/> class.
@@ -64,6 +70,7 @@ public sealed class RestApi : ITiingoRestApi
         Iex = new RestIexApi(_httpClient);
         Crypto = new RestCryptoApi(_httpClient);
         News = new RestNewsApi(_httpClient);
+        Forex = new RestForexApi(_httpClient);
     }
 
     /// <summary>

@@ -102,4 +102,74 @@ public class RestApiTests
                 Assert.Warn($"Volume is zero for {ticker} on {price.Date.ToLocalTime():d} at {price.Date.ToLocalTime():T}. This may indicate no trading activity.");
         }
     }
+
+    [Test]
+    public async Task ForexCurrentTopOfBook()
+    {
+        var prices = await _client.Rest.Forex.GetCurrentTopOfBook(["eurusd", "gbpusd"]);
+        Assert.That(prices, Is.Not.Null);
+        Assert.That(prices, Has.Length.Positive);
+        foreach (var price in prices)
+        {
+            Assert.That(price, Is.Not.Null);
+            Assert.That(price.Ticker, Is.Not.Null.And.Not.Empty);
+            Assert.That(price.QuoteTimestamp, Is.Not.EqualTo(default(DateTimeOffset)));
+            Assert.That(price.MidPrice, Is.GreaterThan(0));
+            Assert.That(price.BidPrice, Is.GreaterThan(0));
+            Assert.That(price.AskPrice, Is.GreaterThan(0));
+        }
+    }
+
+    [Test]
+    public async Task ForexCurrentOpenHighLowClose()
+    {
+        var price = await _client.Rest.Forex.GetCurrentOpenHighLowClose("eurusd");
+        Assert.That(price, Is.Not.Null);
+        Assert.That(price.Ticker, Is.EqualTo("eurusd").IgnoreCase);
+        Assert.That(price.Date, Is.Not.EqualTo(default(DateTimeOffset)));
+        Assert.That(price.Open, Is.GreaterThan(0));
+        Assert.That(price.High, Is.GreaterThan(0));
+        Assert.That(price.Low, Is.GreaterThan(0));
+        Assert.That(price.Close, Is.GreaterThan(0));
+    }
+
+    [Test]
+    public async Task ForexHistoricalOpenHighLowCloseDefault()
+    {
+        var prices = await _client.Rest.Forex.GetHistoricalOpenHighLowClose("eurusd");
+        Assert.That(prices, Is.Not.Null);
+        Assert.That(prices, Has.Length.Positive);
+        foreach (var price in prices)
+        {
+            Assert.That(price, Is.Not.Null);
+            Assert.That(price.Ticker, Is.EqualTo("eurusd").IgnoreCase);
+            Assert.That(price.Date, Is.Not.EqualTo(default(DateTimeOffset)));
+            Assert.That(price.Open, Is.GreaterThan(0));
+            Assert.That(price.High, Is.GreaterThan(0));
+            Assert.That(price.Low, Is.GreaterThan(0));
+            Assert.That(price.Close, Is.GreaterThan(0));
+        }
+    }
+
+    [Test]
+    [TestCase("eurusd")]
+    [TestCase("gbpusd")]
+    [TestCase("usdjpy")]
+    public async Task ForexHistoricalOpenHighLowClose(string ticker)
+    {
+        var interval = new DateTimeInterval(DateTimeOffset.UtcNow - TimeSpan.FromDays(7), DateTimeOffset.UtcNow);
+        var prices = await _client.Rest.Forex.GetHistoricalOpenHighLowClose(ticker, "1hour", interval);
+        Assert.That(prices, Is.Not.Null);
+        Assert.That(prices, Has.Length.Positive);
+        foreach (var price in prices)
+        {
+            Assert.That(price, Is.Not.Null);
+            Assert.That(price.Ticker, Is.EqualTo(ticker).IgnoreCase);
+            Assert.That(price.Date, Is.Not.EqualTo(default(DateTimeOffset)));
+            Assert.That(price.Open, Is.GreaterThan(0));
+            Assert.That(price.High, Is.GreaterThan(0));
+            Assert.That(price.Low, Is.GreaterThan(0));
+            Assert.That(price.Close, Is.GreaterThan(0));
+        }
+    }
 }
