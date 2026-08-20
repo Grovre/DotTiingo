@@ -128,22 +128,9 @@ public class RestApiTests
     }
 
     [Test]
-    public async Task ForexCurrentOpenHighLowClose()
+    public async Task ForexOpenHighLowCloseDefault()
     {
-        var price = await _client.Rest.Forex.GetCurrentOpenHighLowClose("eurusd");
-        Assert.That(price, Is.Not.Null);
-        Assert.That(price.Ticker, Is.EqualTo("eurusd").IgnoreCase);
-        Assert.That(price.Date, Is.Not.EqualTo(default(DateTimeOffset)));
-        Assert.That(price.Open, Is.GreaterThan(0));
-        Assert.That(price.High, Is.GreaterThan(0));
-        Assert.That(price.Low, Is.GreaterThan(0));
-        Assert.That(price.Close, Is.GreaterThan(0));
-    }
-
-    [Test]
-    public async Task ForexHistoricalOpenHighLowCloseDefault()
-    {
-        var prices = await _client.Rest.Forex.GetHistoricalOpenHighLowClose("eurusd");
+        var prices = await _client.Rest.Forex.GetOpenHighLowClose("eurusd");
         Assert.That(prices, Is.Not.Null);
         Assert.That(prices, Has.Length.Positive);
         foreach (var price in prices)
@@ -162,10 +149,10 @@ public class RestApiTests
     [TestCase("eurusd")]
     [TestCase("gbpusd")]
     [TestCase("usdjpy")]
-    public async Task ForexHistoricalOpenHighLowClose(string ticker)
+    public async Task ForexOpenHighLowClose(string ticker)
     {
         var interval = new DateTimeInterval(DateTimeOffset.UtcNow - TimeSpan.FromDays(7), DateTimeOffset.UtcNow);
-        var prices = await _client.Rest.Forex.GetHistoricalOpenHighLowClose(ticker, "1hour", interval);
+        var prices = await _client.Rest.Forex.GetOpenHighLowClose(ticker, "1hour", interval);
         Assert.That(prices, Is.Not.Null);
         Assert.That(prices, Has.Length.Positive);
         foreach (var price in prices)

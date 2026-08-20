@@ -17,21 +17,13 @@ public interface ITiingoRestForexApi
     public Task<ForexCurrentTopOfBook[]> GetCurrentTopOfBook(IEnumerable<string>? tickers);
 
     /// <summary>
-    /// Gets historical intraday open, high, low, close (OHLC) prices for a forex pair.
+    /// Gets open, high, low, close (OHLC) prices for a forex pair.
     /// </summary>
     /// <param name="ticker">The forex ticker symbol.</param>
     /// <param name="resampleFreq">The frequency in which data is resampled (optional).</param>
     /// <param name="interval">The date interval to query historical data for (optional).</param>
     /// <returns>Array of <see cref="ForexCurrentOpenHighLowClose"/>.</returns>
-    public Task<ForexCurrentOpenHighLowClose[]> GetHistoricalOpenHighLowClose(string ticker, string? resampleFreq =  null, DateTimeInterval? interval = null);
-
-    /// <summary>
-    /// Gets the current day's open, high, low, close (OHLC) price for a forex pair.
-    /// </summary>
-    /// <param name="ticker">The forex ticker symbol.</param>
-    /// <param name="resampleFreq">The frequency in which data is resampled (optional).</param>
-    /// <returns>The <see cref="ForexCurrentOpenHighLowClose"/> data.</returns>
-    public Task<ForexCurrentOpenHighLowClose> GetCurrentOpenHighLowClose(string ticker, string? resampleFreq = null);
+    public Task<ForexCurrentOpenHighLowClose[]> GetOpenHighLowClose(string ticker, string? resampleFreq = null, DateTimeInterval? interval = null);
 }
 
 /// <summary>
@@ -63,18 +55,7 @@ public class RestForexApi : ITiingoRestForexApi
     }
     
     /// <inheritdoc/>
-    public async Task<ForexCurrentOpenHighLowClose> GetCurrentOpenHighLowClose(string ticker, string? resampleFreq =  null)
-    {
-        resampleFreq = resampleFreq == null ? string.Empty : $"?resampleFreq={resampleFreq}";
-        var fullUrl = $"{TiingoApiHelper.RestBaseUrl}/tiingo/fx/{ticker}/prices{resampleFreq}";
-
-        var responseFactory = new ApiResultFactory<ForexCurrentOpenHighLowClose[]>(_httpClient);
-        var results = await responseFactory.CreateGet(null, fullUrl);
-        return results.FirstOrDefault() ?? throw new Exception($"No price data returned for {ticker}");
-    }
-    
-    /// <inheritdoc/>
-    public Task<ForexCurrentOpenHighLowClose[]> GetHistoricalOpenHighLowClose(string ticker, string? resampleFreq = null, DateTimeInterval? interval = null)
+    public Task<ForexCurrentOpenHighLowClose[]> GetOpenHighLowClose(string ticker, string? resampleFreq = null, DateTimeInterval? interval = null)
     {
         var fullUrl = $"{TiingoApiHelper.RestBaseUrl}/tiingo/fx/{ticker}/prices";
         if (resampleFreq != null || interval != null)

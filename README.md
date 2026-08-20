@@ -67,11 +67,8 @@ var history = await client.Rest.Iex.GetIexHistoricalPrices(&quot;AAPL&quot;, int
 // Current top-of-book
 var quotes = await client.Rest.Forex.GetCurrentTopOfBook(new[] { &quot;eurusd&quot;, &quot;gbpusd&quot; });
 
-// Current day OHLC
-var current = await client.Rest.Forex.GetCurrentOpenHighLowClose(&quot;eurusd&quot;, resampleFreq: null);
-
-// Historical intraday OHLC prices
-var history = await client.Rest.Forex.GetHistoricalOpenHighLowClose(&quot;eurusd&quot;, resampleFreq: &quot;1hour&quot;, interval: null);
+// Open, high, low, close (OHLC) prices
+var prices = await client.Rest.Forex.GetOpenHighLowClose(&quot;eurusd&quot;, resampleFreq: &quot;1hour&quot;, interval: null);
 ```
 
 ### Crypto
