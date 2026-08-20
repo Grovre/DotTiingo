@@ -166,4 +166,202 @@ public class RestApiTests
             Assert.That(price.Close, Is.GreaterThan(0));
         }
     }
+
+    [Test]
+    public async Task EquityRealtimeCurrentReferencePriceAndLiquiditySingleTicker()
+    {
+        var snapshots = await _client.Rest.EquityRealtime.GetCurrentReferencePriceAndLiquidity("AAPL");
+        Assert.That(snapshots, Is.Not.Null);
+        Assert.That(snapshots, Has.Length.Positive);
+        var snapshot = snapshots[0];
+        Assert.That(snapshot.Ticker, Is.EqualTo("AAPL").IgnoreCase);
+        Assert.That(snapshot.Timestamp, Is.Not.EqualTo(default(DateTimeOffset)));
+        Assert.That(snapshot.PrevClose, Is.GreaterThan(0));
+        Assert.That(snapshot.TngoLast, Is.GreaterThan(0));
+    }
+
+    [Test]
+    public async Task EquityRealtimeCurrentReferencePriceAndLiquidityMultipleTickers()
+    {
+        var snapshots = await _client.Rest.EquityRealtime.GetCurrentReferencePriceAndLiquidity(["AAPL", "MSFT"]);
+        Assert.That(snapshots, Is.Not.Null);
+        Assert.That(snapshots, Has.Length.EqualTo(2));
+        foreach (var snapshot in snapshots)
+        {
+            Assert.That(snapshot, Is.Not.Null);
+            Assert.That(snapshot.Ticker, Is.Not.Null.And.Not.Empty);
+            Assert.That(snapshot.Timestamp, Is.Not.EqualTo(default(DateTimeOffset)));
+            Assert.That(snapshot.PrevClose, Is.GreaterThan(0));
+        }
+    }
+
+    [Test]
+    public async Task EquityRealtimeCurrentReferencePriceAndLiquidityAllTickers()
+    {
+        var snapshots = await _client.Rest.EquityRealtime.GetCurrentReferencePriceAndLiquidity();
+        Assert.That(snapshots, Is.Not.Null);
+        Assert.That(snapshots, Has.Length.Positive);
+        var first = snapshots[0];
+        Assert.That(first.Ticker, Is.Not.Null.And.Not.Empty);
+        Assert.That(first.Timestamp, Is.Not.EqualTo(default(DateTimeOffset)));
+    }
+
+    [Test]
+    [TestCase("AAPL")]
+    [TestCase("MSFT")]
+    [TestCase("GOOG")]
+    public async Task EquityHistoricalPrices(string ticker)
+    {
+        var prices = await _client.Rest.EquityRealtime.GetHistoricalPrices(ticker);
+        Assert.That(prices, Is.Not.Null);
+        Assert.That(prices, Has.Length.Positive);
+        foreach (var price in prices)
+        {
+            Assert.That(price, Is.Not.Null);
+            Assert.That(price.Date, Is.Not.EqualTo(default(DateTimeOffset)));
+            Assert.That(price.Open, Is.Not.EqualTo(default(float)));
+            Assert.That(price.High, Is.Not.EqualTo(default(float)));
+            Assert.That(price.Low, Is.Not.EqualTo(default(float)));
+            Assert.That(price.Close, Is.Not.EqualTo(default(float)));
+        }
+    }
+
+    [Test]
+    public async Task EquityHistoricalPricesWithOptions()
+    {
+        var interval = new DateTimeInterval(DateTimeOffset.UtcNow - TimeSpan.FromDays(7), DateTimeOffset.UtcNow);
+        var prices = await _client.Rest.EquityRealtime.GetHistoricalPrices("AAPL", interval, "1hour", true, true);
+        Assert.That(prices, Is.Not.Null);
+        Assert.That(prices, Has.Length.Positive);
+        foreach (var price in prices)
+        {
+            Assert.That(price, Is.Not.Null);
+            Assert.That(price.Date, Is.Not.EqualTo(default(DateTimeOffset)));
+            Assert.That(price.Open, Is.GreaterThan(0));
+            Assert.That(price.High, Is.GreaterThan(0));
+            Assert.That(price.Low, Is.GreaterThan(0));
+            Assert.That(price.Close, Is.GreaterThan(0));
+        }
+    }
+
+    [Test]
+    public void EquityRealtimeSnapshotDeserialization()
+    {
+        var json = """
+        [
+          {
+            "ticker": "AAPL",
+            "timestamp": "2026-08-20T11:52:34.604927269-04:00",
+            "open": 315.945,
+            "high": 320.28,
+            "low": 315.27,
+            "tngoLast": 316.15,
+            "prevClose": 315.945,
+            "volume": 531548.0,
+            "lqSpread": 0.000032,
+            "lqBidPrice": 316.145,
+            "lqBidSize": 40,
+            "lqRefPrice": 316.15,
+            "lqAskPrice": 316.155,
+            "lqAskSize": 80
+          },
+          {
+            "ticker": "000425",
+            "timestamp": "2026-07-29T20:00:00+00:00",
+            "open": 8.76,
+            "high": 9.09,
+            "low": 8.72,
+            "tngoLast": 9.0,
+            "volume": 147928660,
+            "prevClose": 8.76,
+            "lqRefPrice": 9.0,
+            "lqSpread": null,
+            "lqBidPrice": null,
+            "lqBidSize": null,
+            "lqAskPrice": null,
+            "lqAskSize": null
+          }
+        ]
+        """;
+
+        var options = new System.Text.Json.JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+        var result = System.Text.Json.JsonSerializer.Deserialize<EquityRealtimeSnapshot[]>(json, options);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result, Has.Length.EqualTo(2));
+
+        var first = result![0];
+        Assert.That(first.Ticker, Is.EqualTo("AAPL"));
+        Assert.That(first.Open, Is.EqualTo(315.945f));
+        Assert.That(first.High, Is.EqualTo(320.28f));
+        Assert.That(first.Low, Is.EqualTo(315.27f));
+        Assert.That(first.TngoLast, Is.EqualTo(316.15f));
+        Assert.That(first.PrevClose, Is.EqualTo(315.945f));
+        Assert.That(first.Volume, Is.EqualTo(531548L));
+        Assert.That(first.LqSpread, Is.EqualTo(0.000032f));
+        Assert.That(first.LqBidPrice, Is.EqualTo(316.145f));
+        Assert.That(first.LqBidSize, Is.EqualTo(40L));
+        Assert.That(first.LqRefPrice, Is.EqualTo(316.15f));
+        Assert.That(first.LqAskPrice, Is.EqualTo(316.155f));
+        Assert.That(first.LqAskSize, Is.EqualTo(80L));
+
+        var second = result[1];
+        Assert.That(second.Ticker, Is.EqualTo("000425"));
+        Assert.That(second.Volume, Is.EqualTo(147928660L));
+        Assert.That(second.LqSpread, Is.Null);
+        Assert.That(second.LqBidPrice, Is.Null);
+        Assert.That(second.LqBidSize, Is.Null);
+        Assert.That(second.LqAskPrice, Is.Null);
+        Assert.That(second.LqAskSize, Is.Null);
+    }
+
+    [Test]
+    public void EquityHistoricalPriceDeserialization()
+    {
+        var json = """
+        [
+          {
+            "date": "2024-01-02T13:00:00.000Z",
+            "open": 188.35,
+            "high": 188.36,
+            "low": 187.89,
+            "close": 188.19,
+            "volume": 839.0
+          },
+          {
+            "date": "2024-01-02T21:00:00.000Z",
+            "open": 185.545,
+            "high": 185.545,
+            "low": 185.545,
+            "close": 185.545,
+            "volume": 0.0
+          },
+          {
+            "date": "2024-01-03T00:00:00.000Z",
+            "open": 185.0,
+            "high": 186.0,
+            "low": 184.0,
+            "close": 185.5
+          }
+        ]
+        """;
+
+        var options = new System.Text.Json.JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+        var result = System.Text.Json.JsonSerializer.Deserialize<EquityHistoricalPrice[]>(json, options);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result, Has.Length.EqualTo(3));
+
+        Assert.That(result![0].Open, Is.EqualTo(188.35f));
+        Assert.That(result[0].Close, Is.EqualTo(188.19f));
+        Assert.That(result[0].Volume, Is.EqualTo(839L));
+
+        Assert.That(result[1].Volume, Is.EqualTo(0L));
+
+        Assert.That(result[2].Volume, Is.Null);
+    }
 }
