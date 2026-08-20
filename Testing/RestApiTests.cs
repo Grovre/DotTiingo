@@ -72,6 +72,13 @@ public class RestApiTests
         var prices = await _client.Rest.Iex.GetIexCurrentTopOfBookAndLastPrice(["AAPL"]);
         Assert.That(prices, Is.Not.Null);
         Assert.That(prices, Has.Length.Positive);
+        foreach (var price in prices)
+        {
+            Assert.That(price, Is.Not.Null);
+            Assert.That(price.Ticker, Is.EqualTo("AAPL"));
+            Assert.That(price.Timestamp, Is.Not.EqualTo(default(DateTimeOffset)));
+            Assert.That(price.PrevClose, Is.GreaterThan(0));
+        }
     }
 
     [Test]
