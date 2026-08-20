@@ -33,7 +33,7 @@ Create a `TiingoClient` with an `HttpClient` and your Tiingo API token.
 using DotTiingo;
 
 using var httpClient = new HttpClient();
-var client = new TiingoClient(httpClient, &quot;YOUR_TIINGO_TOKEN&quot;);
+var client = new TiingoClient(httpClient, "YOUR_TIINGO_TOKEN");
 ```
 
 > Your token can be found in your [Tiingo account settings](https://www.tiingo.com/account/api/token).
@@ -47,18 +47,18 @@ Access REST endpoints via `client.Rest`.
 ### End-of-Day Prices
 
 ```csharp
-var prices = await client.Rest.EndOfDay.GetEndOfDayPrices(&quot;AAPL&quot;, interval: null, resampleFreq: null, sortBy: null);
-var meta   = await client.Rest.EndOfDay.GetEndOfDayMeta(&quot;AAPL&quot;);
+var prices = await client.Rest.EndOfDay.GetEndOfDayPrices("AAPL", interval: null, resampleFreq: null, sortBy: null);
+var meta   = await client.Rest.EndOfDay.GetEndOfDayMeta("AAPL");
 ```
 
 ### IEX (Intraday)
 
 ```csharp
 // Current top-of-book and last price
-var quotes = await client.Rest.Iex.GetIexCurrentTopOfBookAndLastPrice(new[] { &quot;AAPL&quot;, &quot;MSFT&quot; });
+var quotes = await client.Rest.Iex.GetIexCurrentTopOfBookAndLastPrice(new[] { "AAPL", "MSFT" });
 
 // Historical intraday prices
-var history = await client.Rest.Iex.GetIexHistoricalPrices(&quot;AAPL&quot;, interval: null, resampleFreq: &quot;1hour&quot;, afterHours: false, forceFill: false);
+var history = await client.Rest.Iex.GetIexHistoricalPrices("AAPL", interval: null, resampleFreq: "1hour", afterHours: false, forceFill: false);
 ```
 
 ### Equity Realtime (Beta)
@@ -67,10 +67,10 @@ var history = await client.Rest.Iex.GetIexHistoricalPrices(&quot;AAPL&quot;, int
 
 ```csharp
 // Current reference price and liquidity snapshot
-var snapshots = await client.Rest.EquityRealtime.GetCurrentReferencePriceAndLiquidity(new[] { &quot;AAPL&quot;, &quot;MSFT&quot; });
+var snapshots = await client.Rest.EquityRealtime.GetCurrentReferencePriceAndLiquidity(new[] { "AAPL", "MSFT" });
 
 // Historical intraday prices
-var history = await client.Rest.EquityRealtime.GetHistoricalPrices(&quot;AAPL&quot;, interval: null, resampleFreq: &quot;1hour&quot;, afterHours: false, forceFill: false);
+var history = await client.Rest.EquityRealtime.GetHistoricalPrices("AAPL", interval: null, resampleFreq: "1hour", afterHours: false, forceFill: false);
 ```
 
 ### Forex (Beta)
@@ -79,27 +79,27 @@ var history = await client.Rest.EquityRealtime.GetHistoricalPrices(&quot;AAPL&qu
 
 ```csharp
 // Current top-of-book
-var quotes = await client.Rest.Forex.GetCurrentTopOfBook(new[] { &quot;eurusd&quot;, &quot;gbpusd&quot; });
+var quotes = await client.Rest.Forex.GetCurrentTopOfBook(new[] { "eurusd", "gbpusd" });
 
 // Open, high, low, close (OHLC) prices
-var prices = await client.Rest.Forex.GetOpenHighLowClose(&quot;eurusd&quot;, resampleFreq: &quot;1hour&quot;, interval: null);
+var prices = await client.Rest.Forex.GetOpenHighLowClose("eurusd", resampleFreq: "1hour", interval: null);
 ```
 
 ### Crypto
 
 ```csharp
 // Prices
-var prices = await client.Rest.Crypto.GetCryptoPrices(new[] { &quot;btcusdt&quot; }, exchanges: null, interval: null, resampleFreq: null);
+var prices = await client.Rest.Crypto.GetCryptoPrices(new[] { "btcusdt" }, exchanges: null, interval: null, resampleFreq: null);
 
 // Metadata
-var meta = await client.Rest.Crypto.GetCryptoMeta(new[] { &quot;btcusdt&quot; });
+var meta = await client.Rest.Crypto.GetCryptoMeta(new[] { "btcusdt" });
 ```
 
 ### News
 
 ```csharp
 var articles = await client.Rest.News.GetNews(
-    tickers:  new[] { &quot;AAPL&quot; },
+    tickers:  new[] { "AAPL" },
     sources:  null,
     interval: null,
     limit:    10,
@@ -112,16 +112,16 @@ var articles = await client.Rest.News.GetNews(
 
 ```csharp
 // Fundamental definitions
-var definitions = await client.Rest.Fundamentals.GetDefinitions(new[] { &quot;AAPL&quot; });
+var definitions = await client.Rest.Fundamentals.GetDefinitions(new[] { "AAPL" });
 
 // Metadata
-var meta = await client.Rest.Fundamentals.GetMeta(new[] { &quot;AAPL&quot;, &quot;MSFT&quot; });
+var meta = await client.Rest.Fundamentals.GetMeta(new[] { "AAPL", "MSFT" });
 
 // Historical financial statements (Income Statement, Balance Sheet, Cash Flow, Overview)
-var statements = await client.Rest.Fundamentals.GetStatements(&quot;AAPL&quot;, interval: null, asReported: false, sort: &quot;-date&quot;);
+var statements = await client.Rest.Fundamentals.GetStatements("AAPL", interval: null, asReported: false, sort: "-date");
 
 // Historical daily fundamental metrics (Market Cap, P/E, P/B, PEG, Enterprise Value)
-var daily = await client.Rest.Fundamentals.GetDaily(&quot;AAPL&quot;, interval: null, sort: &quot;-date&quot;);
+var daily = await client.Rest.Fundamentals.GetDaily("AAPL", interval: null, sort: "-date");
 ```
 
 ---
@@ -147,11 +147,11 @@ using DotTiingo.Model.WebSocket.Response;
 
 using var conn = await client.WebSocket.Crypto.Connect(CryptoThresholdLevel.Trade, CancellationToken.None);
 
-conn.OnResponseReceived += (_, response) =&gt;
+conn.OnResponseReceived += (_, response) =>
 {
     if (response is DataResponse { Data: CryptoTradeUpdate trade })
     {
-        Console.WriteLine($&quot;{trade.Ticker} — ${trade.LastPrice:N2} ({trade.Exchange})&quot;);
+        Console.WriteLine($"{trade.Ticker} — ${trade.LastPrice:N2} ({trade.Exchange})");
     }
 };
 
