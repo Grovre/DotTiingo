@@ -20,25 +20,11 @@ public interface ITiingoRestFundamentalsApi
     Task<FundamentalDefinition[]> GetDefinitions(IEnumerable<string>? tickers = null);
 
     /// <summary>
-    /// Gets definitions for available fundamental metrics for a specific ticker.
-    /// </summary>
-    /// <param name="ticker">The ticker symbol.</param>
-    /// <returns>Array of <see cref="FundamentalDefinition"/>.</returns>
-    Task<FundamentalDefinition[]> GetDefinitions(string ticker);
-
-    /// <summary>
     /// Gets metadata for fundamental data tickers, or all tickers if null.
     /// </summary>
     /// <param name="tickers">The ticker symbols (optional).</param>
     /// <returns>Array of <see cref="FundamentalMeta"/>.</returns>
     Task<FundamentalMeta[]> GetMeta(IEnumerable<string>? tickers = null);
-
-    /// <summary>
-    /// Gets metadata for fundamental data for a specific ticker.
-    /// </summary>
-    /// <param name="ticker">The ticker symbol.</param>
-    /// <returns>Array of <see cref="FundamentalMeta"/>.</returns>
-    Task<FundamentalMeta[]> GetMeta(string ticker);
 
     /// <summary>
     /// Gets historical statement data for a given ticker or permaTicker.
@@ -96,12 +82,6 @@ public class RestFundamentalsApi : ITiingoRestFundamentalsApi
     }
 
     /// <inheritdoc/>
-    public Task<FundamentalDefinition[]> GetDefinitions(string ticker)
-    {
-        return GetDefinitions([ticker]);
-    }
-
-    /// <inheritdoc/>
     public Task<FundamentalMeta[]> GetMeta(IEnumerable<string>? tickers = null)
     {
         var queryString = tickers == null
@@ -111,12 +91,6 @@ public class RestFundamentalsApi : ITiingoRestFundamentalsApi
 
         var apiResultFactory = new ApiResultFactory<FundamentalMeta[]>(_httpClient);
         return apiResultFactory.CreateGet(null, fullUrl);
-    }
-
-    /// <inheritdoc/>
-    public Task<FundamentalMeta[]> GetMeta(string ticker)
-    {
-        return GetMeta([ticker]);
     }
 
     /// <inheritdoc/>

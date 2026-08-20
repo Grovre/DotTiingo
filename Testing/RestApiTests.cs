@@ -368,7 +368,7 @@ public class RestApiTests
     [Test]
     public async Task FundamentalDefinitionsSingleTicker()
     {
-        var definitions = await _client.Rest.Fundamentals.GetDefinitions("AAPL");
+        var definitions = await _client.Rest.Fundamentals.GetDefinitions(["AAPL"]);
         Assert.That(definitions, Is.Not.Null);
         Assert.That(definitions, Has.Length.Positive);
         var first = definitions[0];
@@ -395,7 +395,7 @@ public class RestApiTests
     [Test]
     public async Task FundamentalMetaSingleTicker()
     {
-        var metaList = await _client.Rest.Fundamentals.GetMeta("AAPL");
+        var metaList = await _client.Rest.Fundamentals.GetMeta(["AAPL"]);
         Assert.That(metaList, Is.Not.Null);
         Assert.That(metaList, Has.Length.Positive);
         var meta = metaList[0];
