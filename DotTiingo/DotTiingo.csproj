@@ -12,7 +12,7 @@
     <PackageOutputPath>$(OutputPath)</PackageOutputPath>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
     <LangVersion>latestmajor</LangVersion>
   </PropertyGroup>
 
