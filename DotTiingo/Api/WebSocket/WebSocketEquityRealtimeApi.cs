@@ -12,7 +12,6 @@ namespace DotTiingo.Api.WebSocket;
 /// <summary>
 /// Provides access to the Equity Realtime WebSocket API.
 /// </summary>
-// TODO: Check Tiingo for beta status
 [Experimental("TNGOBETA")]
 public interface ITiingoWebSocketEquityRealtimeApi
 {
@@ -28,7 +27,6 @@ public interface ITiingoWebSocketEquityRealtimeApi
 /// <summary>
 /// Implementation of <see cref="ITiingoWebSocketEquityRealtimeApi"/>.
 /// </summary>
-// TODO: Check Tiingo for beta status
 [Experimental("TNGOBETA")]
 internal class WebSocketEquityRealtimeApi : ITiingoWebSocketEquityRealtimeApi
 {
@@ -56,7 +54,6 @@ internal class WebSocketEquityRealtimeApi : ITiingoWebSocketEquityRealtimeApi
 /// <summary>
 /// Specifies the threshold level for the Tiingo Equity Realtime WebSocket feed, determining the type of data received.
 /// </summary>
-// TODO: Check Tiingo for beta status
 [Experimental("TNGOBETA")]
 public enum EquityRealtimeThresholdLevel
 {
