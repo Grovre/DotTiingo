@@ -1,6 +1,7 @@
 ﻿using DotTiingo.Model.WebSocket;
 using DotTiingo.Model.WebSocket.Response;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -80,38 +81,21 @@ internal sealed class WebSocketConnection : ITiingoWebSocketConnection
         return channel.Reader.ReadAllAsync(cancellationTokens.Token);
     }
 
-    private readonly byte[] _buffer = new byte[1024];
-    private readonly List<byte> _appendBuffer = [];
+    private readonly ArrayBufferWriter<byte> _buffer = new(1024);
     private readonly ResponseFactory _responseFactory = new();
     private async Task<AbstractResponse> ReceiveAsync(CancellationToken cancellationToken)
     {
-        // Clear the buffer that accumulates message fragments.
-        _appendBuffer.Clear();
-        Span<byte> bytes;
-        WebSocketReceiveResult receiveResult;
-        var firstReceive = true;
-        do
+        _buffer.ResetWrittenCount();
+        var endOfMessage = false;
+        while (!endOfMessage)
         {
             // Receive a chunk of data from the WebSocket.
-            receiveResult = await _clientWebSocket.ReceiveAsync(_buffer, cancellationToken);
+            var receiveResult = await _clientWebSocket.ReceiveAsync(_buffer.GetMemory(), cancellationToken);
+            _buffer.Advance(receiveResult.Count);
+            endOfMessage = receiveResult.EndOfMessage;
+        }
 
-            // If this is the first and only chunk, use it directly.
-            if (firstReceive && receiveResult.EndOfMessage)
-            {
-                bytes = _buffer.AsSpan(0, receiveResult.Count);
-                break;
-            }
-
-            // Otherwise, accumulate the chunk for later assembly.
-            firstReceive = false;
-            _appendBuffer.AddRange(_buffer.AsSpan(0, receiveResult.Count));
-        } while (true);
-
-        // If the message was fragmented, use the accumulated buffer.
-        if (!firstReceive)
-            bytes = CollectionsMarshal.AsSpan(_appendBuffer);
-
-        var json = Encoding.UTF8.GetString(bytes);
+        var json = Encoding.UTF8.GetString(_buffer.WrittenSpan);
         var response = _responseFactory.CreateResponseFromJson(json)
             ?? throw new NullReferenceException(
                 "WebSocket response was deserialized as null");
