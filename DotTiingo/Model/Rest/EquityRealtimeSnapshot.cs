@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 
 namespace DotTiingo.Model.Rest;
@@ -6,6 +7,7 @@ namespace DotTiingo.Model.Rest;
 /// <summary>
 /// Represents a current reference price and liquidity snapshot for an equity asset.
 /// </summary>
+[Experimental("TNGOBETA")]
 public record EquityRealtimeSnapshot(
     string Ticker,
     DateTimeOffset Timestamp,

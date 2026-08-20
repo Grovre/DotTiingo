@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
 using System.Threading.Tasks;
 using DotTiingo.Extensions;
@@ -10,6 +11,7 @@ namespace DotTiingo.Api.Rest;
 /// <summary>
 /// Provides access to Equity Realtime price and liquidity endpoints.
 /// </summary>
+[Experimental("TNGOBETA")]
 public interface ITiingoRestEquityRealtimeApi
 {
     /// <summary>
@@ -46,6 +48,7 @@ public interface ITiingoRestEquityRealtimeApi
 /// <summary>
 /// Implementation of <see cref="ITiingoRestEquityRealtimeApi"/>.
 /// </summary>
+[Experimental("TNGOBETA")]
 public class RestEquityRealtimeApi : ITiingoRestEquityRealtimeApi
 {
     private readonly HttpClient _httpClient;

@@ -1,4 +1,5 @@
 ﻿using System.Dynamic;
+using System.Diagnostics.CodeAnalysis;
 using DotTiingo.Extensions;
 using DotTiingo.Model.Rest;
 
@@ -7,6 +8,7 @@ namespace DotTiingo.Api.Rest;
 /// <summary>
 /// Provides access to Forex price endpoints.
 /// </summary>
+[Experimental("TNGOBETA")]
 public interface ITiingoRestForexApi
 {
     /// <summary>
@@ -29,6 +31,7 @@ public interface ITiingoRestForexApi
 /// <summary>
 /// Implementation of <see cref="ITiingoRestForexApi"/>.
 /// </summary>
+[Experimental("TNGOBETA")]
 public class RestForexApi : ITiingoRestForexApi
 {
     private readonly HttpClient _httpClient;

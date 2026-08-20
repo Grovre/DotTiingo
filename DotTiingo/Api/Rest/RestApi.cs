@@ -1,6 +1,7 @@
 ﻿using DotTiingo.Model;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
 using System.Net.Http.Headers;
@@ -36,10 +37,14 @@ public interface ITiingoRestApi : IDisposable
     /// <summary>
     /// Provides access to forex endpoints.
     /// </summary>
+    // TODO: Check Tiingo for beta status
+    [Experimental("TNGOBETA")]
     ITiingoRestForexApi Forex { get; }
     /// <summary>
     /// Provides access to equity realtime endpoints.
     /// </summary>
+    // TODO: Check Tiingo for beta status
+    [Experimental("TNGOBETA")]
     ITiingoRestEquityRealtimeApi EquityRealtime { get; }
     /// <summary>
     /// Provides access to fundamental data endpoints.
@@ -62,8 +67,12 @@ public sealed class RestApi : ITiingoRestApi
     /// <inheritdoc/>
     public ITiingoRestNewsApi News { get; }
     /// <inheritdoc/>
+    // TODO: Check Tiingo for beta status
+    [Experimental("TNGOBETA")]
     public ITiingoRestForexApi Forex { get; }
     /// <inheritdoc/>
+    // TODO: Check Tiingo for beta status
+    [Experimental("TNGOBETA")]
     public ITiingoRestEquityRealtimeApi EquityRealtime { get; }
     /// <inheritdoc/>
     public ITiingoRestFundamentalsApi Fundamentals { get; }
@@ -82,8 +91,10 @@ public sealed class RestApi : ITiingoRestApi
         Iex = new RestIexApi(_httpClient);
         Crypto = new RestCryptoApi(_httpClient);
         News = new RestNewsApi(_httpClient);
+#pragma warning disable TNGOBETA
         Forex = new RestForexApi(_httpClient);
         EquityRealtime = new RestEquityRealtimeApi(_httpClient);
+#pragma warning restore TNGOBETA
         Fundamentals = new RestFundamentalsApi(_httpClient);
     }
 

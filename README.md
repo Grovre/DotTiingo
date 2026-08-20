@@ -61,7 +61,9 @@ var quotes = await client.Rest.Iex.GetIexCurrentTopOfBookAndLastPrice(new[] { &q
 var history = await client.Rest.Iex.GetIexHistoricalPrices(&quot;AAPL&quot;, interval: null, resampleFreq: &quot;1hour&quot;, afterHours: false, forceFill: false);
 ```
 
-### Equity Realtime
+### Equity Realtime (Beta)
+
+> **Beta:** Equity Realtime endpoints are currently in beta on Tiingo.
 
 ```csharp
 // Current reference price and liquidity snapshot
@@ -71,7 +73,9 @@ var snapshots = await client.Rest.EquityRealtime.GetCurrentReferencePriceAndLiqu
 var history = await client.Rest.EquityRealtime.GetHistoricalPrices(&quot;AAPL&quot;, interval: null, resampleFreq: &quot;1hour&quot;, afterHours: false, forceFill: false);
 ```
 
-### Forex
+### Forex (Beta)
+
+> **Beta:** Forex endpoints are currently in beta on Tiingo.
 
 ```csharp
 // Current top-of-book
@@ -163,8 +167,8 @@ await Task.Delay(Timeout.Infinite);
 |-----------------------|--------------------------------------------------------------|
 | `Rest.EndOfDay`       | End-of-day prices and metadata                               |
 | `Rest.Iex`            | Intraday top-of-book and historical IEX                      |
-| `Rest.EquityRealtime` | Consolidated equity reference price, liquidity, and intraday |
-| `Rest.Forex`          | Top-of-book and historical/current OHLC                      |
+| `Rest.EquityRealtime` | Consolidated equity reference price, liquidity, and intraday (Beta) |
+| `Rest.Forex`          | Top-of-book and historical/current OHLC (Beta)               |
 | `Rest.Crypto`         | Crypto prices and metadata                                   |
 | `Rest.News`           | News articles filtered by ticker/source                      |
 | `Rest.Fundamentals`   | Fundamental definitions, metadata, statements, and daily metrics |
