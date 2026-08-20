@@ -7,6 +7,7 @@
     <UserSecretsId>941f8045-18f7-4d7e-8437-506cec497b1b</UserSecretsId>
     <LangVersion>latestmajor</LangVersion>
     <NoWarn>$(NoWarn);TNGOBETA</NoWarn>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>

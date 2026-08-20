@@ -5,23 +5,24 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Title>DotTiingo</Title>
+    <Authors>Grovre</Authors>
     <Description>Easy library for access to Tiingo's API</Description>
-    <Copyright>MIT</Copyright>
+    <PackageProjectUrl>https://github.com/Grovre/DotTiingo</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Grovre/DotTiingo</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <PackageTags>tiingo;finance;stock;stocks;crypto;forex;iex;market-data;rest;websocket</PackageTags>
     <PackageOutputPath>$(OutputPath)</PackageOutputPath>
-    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <Copyright>© 2026 Grovre</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Version>1.2.0</Version>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+    <Version>1.3.0</Version>
     <LangVersion>latestmajor</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\LICENSE.txt">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
     <None Include="..\README.md">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>

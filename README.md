@@ -5,7 +5,7 @@
 
 A simple .NET library for accessing the [Tiingo](https://www.tiingo.com) financial data API.
 
-- **Version:** 1.2.0
+- **Version:** 1.3.0
 - **Target Framework:** .NET 10
 - **License:** MIT
 
@@ -112,7 +112,7 @@ var articles = await client.Rest.News.GetNews(
 
 ```csharp
 // Fundamental definitions
-var definitions = await client.Rest.Fundamentals.GetDefinitions(&quot;AAPL&quot;);
+var definitions = await client.Rest.Fundamentals.GetDefinitions(new[] { &quot;AAPL&quot; });
 
 // Metadata
 var meta = await client.Rest.Fundamentals.GetMeta(new[] { &quot;AAPL&quot;, &quot;MSFT&quot; });
