@@ -41,6 +41,10 @@ public interface ITiingoRestApi : IDisposable
     /// Provides access to equity realtime endpoints.
     /// </summary>
     ITiingoRestEquityRealtimeApi EquityRealtime { get; }
+    /// <summary>
+    /// Provides access to fundamental data endpoints.
+    /// </summary>
+    ITiingoRestFundamentalsApi Fundamentals { get; }
 }
 
 /// <summary>
@@ -61,6 +65,8 @@ public sealed class RestApi : ITiingoRestApi
     public ITiingoRestForexApi Forex { get; }
     /// <inheritdoc/>
     public ITiingoRestEquityRealtimeApi EquityRealtime { get; }
+    /// <inheritdoc/>
+    public ITiingoRestFundamentalsApi Fundamentals { get; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="RestApi"/> class.
@@ -78,6 +84,7 @@ public sealed class RestApi : ITiingoRestApi
         News = new RestNewsApi(_httpClient);
         Forex = new RestForexApi(_httpClient);
         EquityRealtime = new RestEquityRealtimeApi(_httpClient);
+        Fundamentals = new RestFundamentalsApi(_httpClient);
     }
 
     /// <summary>

@@ -104,6 +104,22 @@ var articles = await client.Rest.News.GetNews(
 );
 ```
 
+### Fundamentals
+
+```csharp
+// Fundamental definitions
+var definitions = await client.Rest.Fundamentals.GetDefinitions(&quot;AAPL&quot;);
+
+// Metadata
+var meta = await client.Rest.Fundamentals.GetMeta(new[] { &quot;AAPL&quot;, &quot;MSFT&quot; });
+
+// Historical financial statements (Income Statement, Balance Sheet, Cash Flow, Overview)
+var statements = await client.Rest.Fundamentals.GetStatements(&quot;AAPL&quot;, interval: null, asReported: false, sort: &quot;-date&quot;);
+
+// Historical daily fundamental metrics (Market Cap, P/E, P/B, PEG, Enterprise Value)
+var daily = await client.Rest.Fundamentals.GetDaily(&quot;AAPL&quot;, interval: null, sort: &quot;-date&quot;);
+```
+
 ---
 
 ## WebSocket API
@@ -151,6 +167,7 @@ await Task.Delay(Timeout.Infinite);
 | `Rest.Forex`          | Top-of-book and historical/current OHLC                      |
 | `Rest.Crypto`         | Crypto prices and metadata                                   |
 | `Rest.News`           | News articles filtered by ticker/source                      |
+| `Rest.Fundamentals`   | Fundamental definitions, metadata, statements, and daily metrics |
 
 ### WebSocket
 

@@ -364,4 +364,282 @@ public class RestApiTests
 
         Assert.That(result[2].Volume, Is.Null);
     }
+
+    [Test]
+    public async Task FundamentalDefinitionsSingleTicker()
+    {
+        var definitions = await _client.Rest.Fundamentals.GetDefinitions("AAPL");
+        Assert.That(definitions, Is.Not.Null);
+        Assert.That(definitions, Has.Length.Positive);
+        var first = definitions[0];
+        Assert.That(first.DataCode, Is.Not.Null.And.Not.Empty);
+        Assert.That(first.Name, Is.Not.Null.And.Not.Empty);
+    }
+
+    [Test]
+    public async Task FundamentalDefinitionsMultipleTickers()
+    {
+        var definitions = await _client.Rest.Fundamentals.GetDefinitions(["AAPL", "MSFT"]);
+        Assert.That(definitions, Is.Not.Null);
+        Assert.That(definitions, Has.Length.Positive);
+    }
+
+    [Test]
+    public async Task FundamentalDefinitionsAllTickers()
+    {
+        var definitions = await _client.Rest.Fundamentals.GetDefinitions();
+        Assert.That(definitions, Is.Not.Null);
+        Assert.That(definitions, Has.Length.Positive);
+    }
+
+    [Test]
+    public async Task FundamentalMetaSingleTicker()
+    {
+        var metaList = await _client.Rest.Fundamentals.GetMeta("AAPL");
+        Assert.That(metaList, Is.Not.Null);
+        Assert.That(metaList, Has.Length.Positive);
+        var meta = metaList[0];
+        Assert.That(meta.Ticker, Is.EqualTo("aapl").IgnoreCase);
+        Assert.That(meta.Name, Is.EqualTo("Apple Inc"));
+        Assert.That(meta.PermaTicker, Is.Not.Null.And.Not.Empty);
+        Assert.That(meta.IsActive, Is.True);
+    }
+
+    [Test]
+    public async Task FundamentalMetaMultipleTickers()
+    {
+        var metaList = await _client.Rest.Fundamentals.GetMeta(["AAPL", "MSFT"]);
+        Assert.That(metaList, Is.Not.Null);
+        Assert.That(metaList, Has.Length.EqualTo(2));
+    }
+
+    [Test]
+    public async Task FundamentalMetaAllTickers()
+    {
+        var metaList = await _client.Rest.Fundamentals.GetMeta();
+        Assert.That(metaList, Is.Not.Null);
+        Assert.That(metaList, Has.Length.Positive);
+    }
+
+    [Test]
+    [TestCase("AAPL")]
+    [TestCase("MSFT")]
+    [TestCase("KO")]
+    public async Task FundamentalStatements(string ticker)
+    {
+        var statements = await _client.Rest.Fundamentals.GetStatements(ticker);
+        Assert.That(statements, Is.Not.Null);
+        Assert.That(statements, Has.Length.Positive);
+        foreach (var statement in statements)
+        {
+            Assert.That(statement.Year, Is.GreaterThan(2000));
+            Assert.That(statement.Date, Is.Not.EqualTo(default(DateTimeOffset)));
+            Assert.That(statement.StatementData, Is.Not.Null);
+        }
+    }
+
+    [Test]
+    public async Task FundamentalStatementsWithOptions()
+    {
+        var interval = new DateTimeInterval(DateTimeOffset.UtcNow - TimeSpan.FromDays(365 * 3), DateTimeOffset.UtcNow);
+        var statements = await _client.Rest.Fundamentals.GetStatements("AAPL", interval, asReported: true, sort: "-date");
+        Assert.That(statements, Is.Not.Null);
+        Assert.That(statements, Has.Length.Positive);
+        foreach (var statement in statements)
+        {
+            Assert.That(statement.Date, Is.Not.EqualTo(default(DateTimeOffset)));
+            Assert.That(statement.StatementData, Is.Not.Null);
+        }
+    }
+
+    [Test]
+    [TestCase("AAPL")]
+    [TestCase("MSFT")]
+    [TestCase("KO")]
+    public async Task FundamentalDaily(string ticker)
+    {
+        var dailyMetrics = await _client.Rest.Fundamentals.GetDaily(ticker);
+        Assert.That(dailyMetrics, Is.Not.Null);
+        Assert.That(dailyMetrics, Has.Length.Positive);
+        foreach (var metric in dailyMetrics)
+        {
+            Assert.That(metric.Date, Is.Not.EqualTo(default(DateTimeOffset)));
+        }
+    }
+
+    [Test]
+    public async Task FundamentalDailyWithOptions()
+    {
+        var interval = new DateTimeInterval(DateTimeOffset.UtcNow - TimeSpan.FromDays(90), DateTimeOffset.UtcNow);
+        var dailyMetrics = await _client.Rest.Fundamentals.GetDaily("AAPL", interval, sort: "-date");
+        Assert.That(dailyMetrics, Is.Not.Null);
+        Assert.That(dailyMetrics, Has.Length.Positive);
+        foreach (var metric in dailyMetrics)
+        {
+            Assert.That(metric.Date, Is.Not.EqualTo(default(DateTimeOffset)));
+            if (metric.MarketCap.HasValue)
+                Assert.That(metric.MarketCap.Value, Is.GreaterThan(0));
+        }
+    }
+
+    [Test]
+    public void FundamentalDefinitionDeserialization()
+    {
+        var json = """
+        [
+          {
+            "dataCode": "rps",
+            "name": "Revenue Per Share",
+            "description": "Revenue per share",
+            "statementType": "overview",
+            "units": "$"
+          },
+          {
+            "dataCode": "roa",
+            "name": "Return on Assets ROA",
+            "description": "Net Income/Total Assets",
+            "statementType": "overview",
+            "units": "%"
+          },
+          {
+            "dataCode": "assetTurnover",
+            "name": "Asset Turnover",
+            "description": "Revenue over assets",
+            "statementType": "overview",
+            "units": null
+          }
+        ]
+        """;
+
+        var options = new System.Text.Json.JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+        var result = System.Text.Json.JsonSerializer.Deserialize<FundamentalDefinition[]>(json, options);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result, Has.Length.EqualTo(3));
+        Assert.That(result![0].DataCode, Is.EqualTo("rps"));
+        Assert.That(result[0].Name, Is.EqualTo("Revenue Per Share"));
+        Assert.That(result[0].Units, Is.EqualTo("$"));
+        Assert.That(result[2].Units, Is.Null);
+    }
+
+    [Test]
+    public void FundamentalMetaDeserialization()
+    {
+        var json = """
+        [
+          {
+            "permaTicker": "US000000000038",
+            "ticker": "aapl",
+            "name": "Apple Inc",
+            "isActive": true,
+            "isADR": false,
+            "sector": "Technology",
+            "industry": "Consumer Electronics",
+            "sicCode": 3571,
+            "sicSector": "Manufacturing",
+            "sicIndustry": "Electronic Computers",
+            "reportingCurrency": "usd",
+            "location": "California, USA",
+            "companyWebsite": "http://www.apple.com",
+            "secFilingWebsite": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0000320193",
+            "statementLastUpdated": "2026-08-01T01:01:20.677Z",
+            "dailyLastUpdated": "2026-08-20T01:01:20.677Z"
+          }
+        ]
+        """;
+
+        var options = new System.Text.Json.JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+        var result = System.Text.Json.JsonSerializer.Deserialize<FundamentalMeta[]>(json, options);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result, Has.Length.EqualTo(1));
+        var meta = result![0];
+        Assert.That(meta.PermaTicker, Is.EqualTo("US000000000038"));
+        Assert.That(meta.Ticker, Is.EqualTo("aapl"));
+        Assert.That(meta.Name, Is.EqualTo("Apple Inc"));
+        Assert.That(meta.IsActive, Is.True);
+        Assert.That(meta.IsADR, Is.False);
+        Assert.That(meta.SicCode, Is.EqualTo(3571));
+        Assert.That(meta.StatementLastUpdated, Is.Not.Null);
+        Assert.That(meta.DailyLastUpdated, Is.Not.Null);
+    }
+
+    [Test]
+    public void FundamentalStatementDeserialization()
+    {
+        var json = """
+        [
+          {
+            "date": "2026-06-27",
+            "year": 2026,
+            "quarter": 3,
+            "statementData": {
+              "cashFlow": [
+                { "dataCode": "ncff", "value": -32640000000.0 },
+                { "dataCode": "ncfi", "value": -7757000000.0 }
+              ],
+              "balanceSheet": [
+                { "dataCode": "totalAssets", "value": 323888000000.0 }
+              ],
+              "incomeStatement": [
+                { "dataCode": "netIncome", "value": 12674000000.0 }
+              ],
+              "overview": [
+                { "dataCode": "peRatio", "value": 29.18 }
+              ]
+            }
+          }
+        ]
+        """;
+
+        var options = new System.Text.Json.JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+        var result = System.Text.Json.JsonSerializer.Deserialize<FundamentalStatement[]>(json, options);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result, Has.Length.EqualTo(1));
+        var stmt = result![0];
+        Assert.That(stmt.Year, Is.EqualTo(2026));
+        Assert.That(stmt.Quarter, Is.EqualTo(3));
+        Assert.That(stmt.StatementData.CashFlow, Has.Length.EqualTo(2));
+        Assert.That(stmt.StatementData.CashFlow![0].DataCode, Is.EqualTo("ncff"));
+        Assert.That(stmt.StatementData.CashFlow[0].Value, Is.EqualTo(-32640000000.0));
+        Assert.That(stmt.StatementData.BalanceSheet![0].Value, Is.EqualTo(323888000000.0));
+    }
+
+    [Test]
+    public void FundamentalDailyMetricDeserialization()
+    {
+        var json = """
+        [
+          {
+            "date": "2023-08-21T00:00:00.000Z",
+            "marketCap": 2765734959680.0,
+            "enterpriseVal": 2812532959680.0,
+            "peRatio": 29.1867344837,
+            "pbRatio": 45.8860364283,
+            "trailingPEG1Y": 5.0034401972
+          }
+        ]
+        """;
+
+        var options = new System.Text.Json.JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+        var result = System.Text.Json.JsonSerializer.Deserialize<FundamentalDailyMetric[]>(json, options);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result, Has.Length.EqualTo(1));
+        var metric = result![0];
+        Assert.That(metric.MarketCap, Is.EqualTo(2765734959680.0));
+        Assert.That(metric.EnterpriseVal, Is.EqualTo(2812532959680.0));
+        Assert.That(metric.PeRatio, Is.EqualTo(29.1867344837));
+        Assert.That(metric.PbRatio, Is.EqualTo(45.8860364283));
+        Assert.That(metric.TrailingPEG1Y, Is.EqualTo(5.0034401972));
+    }
 }
