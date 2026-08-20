@@ -125,6 +125,95 @@ public class ResponseFactoryTests
     }
 
     [Test]
+    public void CreateResponseFromJson_EquityRealtimeReferencePriceUpdate_ReturnsDataResponse()
+    {
+        var json = """
+        {
+            "messageType": "A",
+            "service": "cons",
+            "data": ["2023-01-15T15:30:00.000000+00:00", "AAPL", 150.75]
+        }
+        """;
+
+        var response = ResponseFactory.CreateResponseFromJson(Encoding.UTF8.GetBytes(json));
+
+        Assert.That(response, Is.InstanceOf<DataResponse>());
+        var dataResponse = (DataResponse)response;
+        Assert.That(dataResponse.MessageType, Is.EqualTo('A'));
+        Assert.That(dataResponse.Service, Is.EqualTo("cons"));
+        Assert.That(dataResponse.Data, Is.InstanceOf<EquityRealtimeReferencePriceUpdate>());
+
+        var priceUpdate = (EquityRealtimeReferencePriceUpdate)dataResponse.Data;
+        Assert.That(priceUpdate.Date, Is.EqualTo(DateTimeOffset.Parse("2023-01-15T15:30:00.000000+00:00")));
+        Assert.That(priceUpdate.Ticker, Is.EqualTo("AAPL"));
+        Assert.That(priceUpdate.ReferencePrice, Is.EqualTo(150.75f).Within(0.0001f));
+    }
+
+    [Test]
+    public void CreateResponseFromJson_EquityRealtimeLiquidityRiskMetricUpdate_ReturnsDataResponse()
+    {
+        var json = """
+        {
+            "messageType": "A",
+            "service": "cons",
+            "data": ["2023-01-15T15:30:00.000000+00:00", "AAPL", 0.04, 100, 150.70, 150.75, 150.80, 200]
+        }
+        """;
+
+        var response = ResponseFactory.CreateResponseFromJson(Encoding.UTF8.GetBytes(json));
+
+        Assert.That(response, Is.InstanceOf<DataResponse>());
+        var dataResponse = (DataResponse)response;
+        Assert.That(dataResponse.MessageType, Is.EqualTo('A'));
+        Assert.That(dataResponse.Service, Is.EqualTo("cons"));
+        Assert.That(dataResponse.Data, Is.InstanceOf<EquityRealtimeLiquidityRiskMetricUpdate>());
+
+        var lqUpdate = (EquityRealtimeLiquidityRiskMetricUpdate)dataResponse.Data;
+        Assert.That(lqUpdate.Date, Is.EqualTo(DateTimeOffset.Parse("2023-01-15T15:30:00.000000+00:00")));
+        Assert.That(lqUpdate.Ticker, Is.EqualTo("AAPL"));
+        Assert.That(lqUpdate.LiquiditySpread, Is.EqualTo(0.04f).Within(0.0001f));
+        Assert.That(lqUpdate.LiquidityBidSize, Is.EqualTo(100));
+        Assert.That(lqUpdate.LiquidityBidPrice, Is.EqualTo(150.70f).Within(0.0001f));
+        Assert.That(lqUpdate.ReferencePrice, Is.EqualTo(150.75f).Within(0.0001f));
+        Assert.That(lqUpdate.LiquidityAskPrice, Is.EqualTo(150.80f).Within(0.0001f));
+        Assert.That(lqUpdate.LiquidityAskSize, Is.EqualTo(200));
+    }
+
+    [Test]
+    public void CreateResponseFromJson_EquityRealtimeDataBeforeService_ParsesCorrectly()
+    {
+        var json = """
+        {
+            "data": ["2023-01-15T15:30:00.000000+00:00", "AAPL", 0.04, 100, 150.70, 150.75, 150.80, 200],
+            "service": "cons",
+            "messageType": "A"
+        }
+        """;
+
+        var response = ResponseFactory.CreateResponseFromJson(Encoding.UTF8.GetBytes(json));
+
+        var dataResponse = (DataResponse)response;
+        Assert.That(dataResponse.Service, Is.EqualTo("cons"));
+        Assert.That(dataResponse.Data, Is.InstanceOf<EquityRealtimeLiquidityRiskMetricUpdate>());
+    }
+
+    [Test]
+    public void CreateResponseFromJson_EquityRealtimeInvalidLength_ThrowsNotSupportedException()
+    {
+        var json = """
+        {
+            "messageType": "A",
+            "service": "cons",
+            "data": ["2023-01-15T15:30:00.000000+00:00", "AAPL"]
+        }
+        """;
+
+        var ex = Assert.Throws<NotSupportedException>(() =>
+            ResponseFactory.CreateResponseFromJson(Encoding.UTF8.GetBytes(json)));
+        Assert.That(ex!.Message, Does.Contain("Consolidated equity message with array length '2' not supported."));
+    }
+
+    [Test]
     public void CreateResponseFromJson_UtilityInfoResponse_ReturnsUtilityResponse()
     {
         var json = """

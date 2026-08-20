@@ -157,4 +157,86 @@ public class WebSocketApiTests
 
         Assert.That(datum + utilities, Is.Positive);
     }
+
+    [Test]
+    public async Task EquityRealtimeReferencePrice()
+    {
+        var marketOpen = new TimeOnly(8, 0);   // 4:00 AM ET in UTC
+        var marketClose = new TimeOnly(0, 0);  // 8:00 PM ET in UTC
+        var currentUtcTime = DateTime.UtcNow;
+        var currentTime = TimeOnly.FromTimeSpan(currentUtcTime.TimeOfDay);
+
+        if (currentUtcTime.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday ||
+            (currentTime < marketOpen && currentTime >= marketClose))
+        {
+            Assert.Fail("Markets are closed");
+        }
+
+        using var conn = await _client.WebSocket.EquityRealtime.Connect(EquityRealtimeThresholdLevel.ReferencePrice, CancellationToken.None);
+
+        var datum = 0;
+        var utilities = 0;
+        var messages = new List<AbstractResponse>();
+        conn.OnResponseReceived += (sender, response) =>
+        {
+            messages.Add(response);
+            if (response is UtilityResponse utility)
+                utilities++;
+            else if (response is DataResponse data)
+                datum++;
+            else
+            {
+                Assert.Fail($"Unknown response type: {response.GetType()}. Message type: {response.MessageType}");
+            }
+        };
+
+        var timedOut = !SpinWait.SpinUntil(
+            () => datum + utilities > ExpectedMessages, Timeout);
+
+        if (timedOut)
+            Assert.Fail("Not enough responses received.");
+
+        Assert.That(datum + utilities, Is.Positive);
+    }
+
+    [Test]
+    public async Task EquityRealtimeLiquidityRiskMetric()
+    {
+        var marketOpen = new TimeOnly(8, 0);   // 4:00 AM ET in UTC
+        var marketClose = new TimeOnly(0, 0);  // 8:00 PM ET in UTC
+        var currentUtcTime = DateTime.UtcNow;
+        var currentTime = TimeOnly.FromTimeSpan(currentUtcTime.TimeOfDay);
+
+        if (currentUtcTime.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday ||
+            (currentTime < marketOpen && currentTime >= marketClose))
+        {
+            Assert.Fail("Markets are closed");
+        }
+
+        using var conn = await _client.WebSocket.EquityRealtime.Connect(EquityRealtimeThresholdLevel.LiquidityRiskMetric, CancellationToken.None);
+
+        var datum = 0;
+        var utilities = 0;
+        var messages = new List<AbstractResponse>();
+        conn.OnResponseReceived += (sender, response) =>
+        {
+            messages.Add(response);
+            if (response is UtilityResponse utility)
+                utilities++;
+            else if (response is DataResponse data)
+                datum++;
+            else
+            {
+                Assert.Fail($"Unknown response type: {response.GetType()}. Message type: {response.MessageType}");
+            }
+        };
+
+        var timedOut = !SpinWait.SpinUntil(
+            () => datum + utilities > ExpectedMessages, Timeout);
+
+        if (timedOut)
+            Assert.Fail("Not enough responses received.");
+
+        Assert.That(datum + utilities, Is.Positive);
+    }
 }

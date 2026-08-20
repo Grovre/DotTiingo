@@ -132,11 +132,12 @@ Access real-time streams via `client.WebSocket`. Each connection returns an `ITi
 
 ### Available Feeds
 
-| Feed   | Method                                        | Threshold Levels                           |
-|--------|-----------------------------------------------|--------------------------------------------|
-| Crypto | `client.WebSocket.Crypto.Connect(level, ct)`  | `Trade`, `QuoteAndTrade`                   |
-| IEX    | `client.WebSocket.Iex.Connect(level, ct)`     | `AllUpdates`, `Filtered`, `ReferencePrice` |
-| Forex  | `client.WebSocket.Forex.Connect(level, ct)`   | `TopOfBook`                                |
+| Feed                   | Method                                                 | Threshold Levels                           |
+|------------------------|--------------------------------------------------------|--------------------------------------------|
+| Crypto                 | `client.WebSocket.Crypto.Connect(level, ct)`           | `Trade`, `QuoteAndTrade`                   |
+| IEX                    | `client.WebSocket.Iex.Connect(level, ct)`              | `AllUpdates`, `Filtered`, `ReferencePrice` |
+| Equity Realtime (Beta) | `client.WebSocket.EquityRealtime.Connect(level, ct)`   | `LiquidityRiskMetric`, `ReferencePrice`    |
+| Forex (Beta)           | `client.WebSocket.Forex.Connect(level, ct)`            | `TopOfBook`                                |
 
 ### Example — Live Crypto Trades
 
@@ -175,11 +176,12 @@ await Task.Delay(Timeout.Infinite);
 
 ### WebSocket
 
-| Property            | Description              | Threshold Enum         |
-|---------------------|--------------------------|------------------------|
-| `WebSocket.Crypto`  | Real-time crypto feed    | `CryptoThresholdLevel` |
-| `WebSocket.Iex`     | Real-time IEX feed       | `IexThresholdLevel`    |
-| `WebSocket.Forex`   | Real-time forex feed     | `ForexThresholdLevel`  |
+| Property                   | Description                                                         | Threshold Enum                |
+|----------------------------|---------------------------------------------------------------------|-------------------------------|
+| `WebSocket.Crypto`         | Real-time crypto feed                                               | `CryptoThresholdLevel`        |
+| `WebSocket.Iex`            | Real-time IEX feed                                                  | `IexThresholdLevel`           |
+| `WebSocket.EquityRealtime` | Real-time consolidated equity reference price and liquidity (Beta) | `EquityRealtimeThresholdLevel`|
+| `WebSocket.Forex`          | Real-time forex feed (Beta)                                         | `ForexThresholdLevel`         |
 
 ---
 

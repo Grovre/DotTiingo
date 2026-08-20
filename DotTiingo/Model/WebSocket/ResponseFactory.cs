@@ -8,6 +8,7 @@ internal static class ResponseFactory
     private const string ServiceCryptoData = "crypto_data";
     private const string ServiceIex = "iex";
     private const string ServiceFx = "fx";
+    private const string ServiceCons = "cons";
 
     private enum ServiceKind
     {
@@ -15,6 +16,7 @@ internal static class ResponseFactory
         CryptoData,
         Iex,
         Fx,
+        Cons,
         Unsupported
     }
 
@@ -70,6 +72,11 @@ internal static class ResponseFactory
                 {
                     service = ServiceFx;
                     serviceKind = ServiceKind.Fx;
+                }
+                else if (reader.ValueTextEquals("cons"u8))
+                {
+                    service = ServiceCons;
+                    serviceKind = ServiceKind.Cons;
                 }
                 else
                 {
@@ -218,6 +225,8 @@ internal static class ResponseFactory
                 return ParseIexDataArray(ref reader);
             case ServiceKind.Fx:
                 return ParseFxDataArray(ref reader);
+            case ServiceKind.Cons:
+                return ParseConsDataArray(ref reader);
             default:
                 throw new NotSupportedException(
                     $"Service '{service}' not supported.");
@@ -320,6 +329,46 @@ internal static class ResponseFactory
             askPrice);
     }
 
+#pragma warning disable TNGOBETA
+    private static IResponseData ParseConsDataArray(ref Utf8JsonReader reader)
+    {
+        var arrayStart = reader;
+        var count = CountArrayElements(ref arrayStart);
+
+        if (count == 3)
+        {
+            var dttm = ReadDateTimeOffset(ref reader, "date");
+            var ticker = ReadString(ref reader, "ticker");
+            var referencePrice = ReadSingle(ref reader, "referencePrice");
+            return new EquityRealtimeReferencePriceUpdate(dttm, ticker, referencePrice);
+        }
+
+        if (count >= 8)
+        {
+            var dttm = ReadDateTimeOffset(ref reader, "date");
+            var ticker = ReadString(ref reader, "ticker");
+            var lqSpread = ReadSingle(ref reader, "lqSpread");
+            var lqBidSize = ReadInt32(ref reader, "lqBidSize");
+            var lqBidPrice = ReadSingle(ref reader, "lqBidPrice");
+            var referencePrice = ReadSingle(ref reader, "referencePrice");
+            var lqAskPrice = ReadSingle(ref reader, "lqAskPrice");
+            var lqAskSize = ReadInt32(ref reader, "lqAskSize");
+            return new EquityRealtimeLiquidityRiskMetricUpdate(
+                dttm,
+                ticker,
+                lqSpread,
+                lqBidSize,
+                lqBidPrice,
+                referencePrice,
+                lqAskPrice,
+                lqAskSize);
+        }
+
+        throw new NotSupportedException(
+            $"Consolidated equity message with array length '{count}' not supported.");
+    }
+#pragma warning restore TNGOBETA
+
     /// <summary>
     /// Counts the elements of the array the reader is positioned at (its StartArray token).
     /// </summary>
@@ -390,6 +439,15 @@ internal static class ResponseFactory
             throw new JsonException(
                 $"Expected '{name}' to be a number but found {reader.TokenType}.");
         return reader.GetSingle();
+    }
+
+    private static int ReadInt32(ref Utf8JsonReader reader, string name)
+    {
+        ReadNext(ref reader);
+        if (reader.TokenType != JsonTokenType.Number)
+            throw new JsonException(
+                $"Expected '{name}' to be a number but found {reader.TokenType}.");
+        return reader.GetInt32();
     }
 
     private static DateTimeOffset ReadDateTimeOffset(ref Utf8JsonReader reader, string name)

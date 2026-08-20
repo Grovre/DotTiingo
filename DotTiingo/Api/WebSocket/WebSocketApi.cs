@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Text;
@@ -24,6 +25,12 @@ public interface ITiingoWebSocketApi
     /// Provides access to the IEX WebSocket API.
     /// </summary>
     ITiingoWebSocketIexApi Iex { get; }
+    /// <summary>
+    /// Provides access to the Equity Realtime WebSocket API.
+    /// </summary>
+    // TODO: Check Tiingo for beta status
+    [Experimental("TNGOBETA")]
+    ITiingoWebSocketEquityRealtimeApi EquityRealtime { get; }
 }
 
 /// <summary>
@@ -37,6 +44,10 @@ internal class WebSocketApi : ITiingoWebSocketApi
     public ITiingoWebSocketForexApi Forex { get; }
     /// <inheritdoc/>
     public ITiingoWebSocketIexApi Iex { get; }
+    /// <inheritdoc/>
+    // TODO: Check Tiingo for beta status
+    [Experimental("TNGOBETA")]
+    public ITiingoWebSocketEquityRealtimeApi EquityRealtime { get; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="WebSocketApi"/> class.
@@ -47,5 +58,8 @@ internal class WebSocketApi : ITiingoWebSocketApi
         Crypto = new WebSocketCryptoApi(token);
         Forex = new WebSocketForexApi(token);
         Iex = new WebSocketIexApi(token);
+#pragma warning disable TNGOBETA
+        EquityRealtime = new WebSocketEquityRealtimeApi(token);
+#pragma warning restore TNGOBETA
     }
 }
