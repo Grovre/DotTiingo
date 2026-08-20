@@ -120,12 +120,13 @@ public class WebSocketApiTests
     [Test]
     public async Task Iex()
     {
-        var open = new TimeOnly(13, 30);  // 9:30 AM ET in UTC
-        var close = new TimeOnly(20, 0);  // 4:00 PM ET in UTC
-        var now = DateTime.UtcNow;
+        var marketOpen = new TimeOnly(13, 30);  // 9:30 AM ET in UTC
+        var marketClose = new TimeOnly(20, 0);  // 4:00 PM ET in UTC
+        var currentUtcTime = DateTime.UtcNow;
+        var currentTime = TimeOnly.FromTimeSpan(currentUtcTime.TimeOfDay);
 
-        if (now.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday ||
-            now.TimeOfDay < open.ToTimeSpan() || now.TimeOfDay >= close.ToTimeSpan())
+        if (currentUtcTime.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday ||
+            currentTime < marketOpen || currentTime >= marketClose)
         {
             Assert.Fail("Markets are closed");
         }
